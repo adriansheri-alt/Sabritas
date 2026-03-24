@@ -7,1120 +7,899 @@
 <title>Fill Rate Tracker — Sabeamex</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <style>
-* { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
-body { font-family: Arial, Helvetica, sans-serif; background: #f4f4f4; color: #1a1a1a; font-size: 13px; }
-button { cursor: pointer; font-family: inherit; }
-input, select, textarea { font-family: inherit; }
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+body{font-family:Arial,Helvetica,sans-serif;background:#f4f4f4;color:#1a1a1a;font-size:13px;}
+button{cursor:pointer;font-family:inherit;}
+input,select{font-family:inherit;}
 
-/* ── HEADER ── */
-.hdr {
-background: #fff; border-bottom: 1px solid #ddd;
-position: sticky; top: 0; z-index: 80;
-}
-.hdr-top {
-display: flex; align-items: center; justify-content: space-between;
-padding: 10px 16px; border-bottom: 1px solid #eee;
-}
-.brand-name { font-size: 14px; font-weight: 700; color: #1a1a1a; }
-.brand-sub  { font-size: 11px; color: #888; margin-top: 1px; }
-.mes-btn {
-font-size: 12px; font-weight: 600; color: #333;
-background: #f4f4f4; border: 1px solid #ccc;
-padding: 6px 12px; border-radius: 4px;
-display: flex; align-items: center; gap: 5px;
-}
+#login-screen{display:flex;align-items:center;justify-content:center;min-height:100vh;background:#f4f4f4;padding:20px;}
+.login-box{background:#fff;border:1px solid #ddd;border-radius:8px;padding:32px 24px;width:100%;max-width:360px;box-shadow:0 2px 12px rgba(0,0,0,.08);}
+.login-title{font-size:20px;font-weight:700;text-align:center;margin-bottom:4px;}
+.login-sub{font-size:12px;color:#888;text-align:center;margin-bottom:24px;}
+.lf{margin-bottom:14px;}
+.lf label{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:#999;display:block;margin-bottom:5px;}
+.lf input{width:100%;border:1px solid #ccc;color:#1a1a1a;font-size:15px;padding:12px;border-radius:6px;outline:none;background:#fff;-webkit-appearance:none;}
+.lf input:focus{border-color:#1a1a1a;}
+.login-btn{width:100%;background:#1a1a1a;color:#fff;font-size:15px;font-weight:700;padding:13px;border:none;border-radius:6px;margin-top:6px;-webkit-appearance:none;}
+.login-err{font-size:12px;color:#b02020;text-align:center;margin-top:12px;min-height:18px;}
 
-/* ── TABS ── */
-.tabs { display: flex; overflow-x: auto; scrollbar-width: none; }
-.tabs::-webkit-scrollbar { display: none; }
-.tab {
-font-size: 12px; font-weight: 600; padding: 10px 18px;
-border: none; background: transparent; color: #888;
-border-bottom: 2px solid transparent; white-space: nowrap; transition: all .15s;
-}
-.tab.on { color: #1a1a1a; border-bottom-color: #1a1a1a; }
+#app{display:none;}
 
-/* ── KPI BAR ── */
-.kpi-bar {
-display: grid; grid-template-columns: repeat(5,1fr);
-background: #fff; border-bottom: 1px solid #ddd;
-}
-.ki { padding: 10px 12px; border-right: 1px solid #eee; }
-.ki:last-child { border-right: none; }
-.kl { font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; color: #999; margin-bottom: 2px; }
-.kv { font-size: 18px; font-weight: 700; line-height: 1; color: #1a1a1a; }
-.kv.ok     { color: #2a7d4f; }
-.kv.warn   { color: #9a5e00; }
-.kv.danger { color: #b02020; }
-.kv.blue   { color: #1a5ea8; }
-.ks { font-size: 9px; color: #aaa; margin-top: 2px; }
+.hdr{background:#fff;border-bottom:1px solid #ddd;position:sticky;top:0;z-index:80;}
+.hdr-top{display:flex;align-items:center;justify-content:space-between;padding:10px 14px;border-bottom:1px solid #eee;gap:6px;}
+.brand-name{font-size:13px;font-weight:700;}
+.brand-sub{font-size:10px;color:#888;}
+.hdr-right{display:flex;align-items:center;gap:6px;flex-wrap:wrap;justify-content:flex-end;}
+.user-tag{font-size:11px;font-weight:700;background:#f0f0f0;border:1px solid #ddd;padding:4px 9px;border-radius:20px;color:#333;white-space:nowrap;}
+.sdot{width:8px;height:8px;border-radius:50%;background:#ccc;flex-shrink:0;}
+.sdot.ok{background:#2a7d4f;}.sdot.sy{background:#e07b00;}.sdot.er{background:#b02020;}
+.slbl{font-size:10px;color:#888;}
+.mes-btn{font-size:11px;font-weight:600;color:#333;background:#f4f4f4;border:1px solid #ccc;padding:5px 10px;border-radius:4px;white-space:nowrap;}
+.logout-btn{font-size:11px;color:#888;background:none;border:1px solid #ddd;padding:5px 8px;border-radius:4px;}
 
-/* ── PROGRESS ── */
-.prog-strip {
-background: #fff; border-bottom: 1px solid #ddd; padding: 10px 16px;
-}
-.ps-row { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 5px; }
-.ps-lbl { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; color: #999; }
-.ps-pct { font-size: 22px; font-weight: 700; color: #1a1a1a; }
-.track { height: 5px; background: #e8e8e8; border-radius: 3px; overflow: hidden; }
-.track-fill { height: 100%; border-radius: 3px; transition: width .5s ease; }
+.tabs{display:flex;overflow-x:auto;scrollbar-width:none;}
+.tabs::-webkit-scrollbar{display:none;}
+.tab{font-size:12px;font-weight:600;padding:10px 14px;border:none;background:transparent;color:#888;border-bottom:2px solid transparent;white-space:nowrap;}
+.tab.on{color:#1a1a1a;border-bottom-color:#1a1a1a;}
 
-/* ── TOOLBAR ── */
-.toolbar {
-background: #fff; border-bottom: 1px solid #ddd;
-padding: 8px 12px; display: flex; align-items: center; gap: 6px;
-overflow-x: auto; scrollbar-width: none; flex-wrap: wrap;
-}
-.toolbar::-webkit-scrollbar { display: none; }
-.f-btn {
-font-size: 11px; font-weight: 600; padding: 5px 11px;
-border-radius: 3px; border: 1px solid #ccc; color: #666;
-background: #fff; white-space: nowrap; transition: all .12s;
-}
-.f-btn.on              { background: #1a1a1a; color: #fff; border-color: #1a1a1a; }
-.f-btn.f-danger.on     { background: #fdf0f0; color: #b02020; border-color: #e0a0a0; }
-.f-btn.f-warn.on       { background: #fdf6ec; color: #9a5e00; border-color: #e0c080; }
-.f-btn.f-ok.on         { background: #f0f8f4; color: #2a7d4f; border-color: #90cca8; }
-.tsep { width: 1px; height: 18px; background: #ddd; flex-shrink: 0; }
-.t-btn {
-font-size: 11px; font-weight: 600; padding: 5px 11px;
-border-radius: 3px; border: 1px solid #ccc; color: #444;
-background: #fff; white-space: nowrap; transition: all .12s;
-}
-.t-btn:hover { border-color: #888; color: #1a1a1a; }
-.t-btn.primary { background: #1a1a1a; color: #fff; border-color: #1a1a1a; }
-.t-btn.primary:hover { background: #333; }
-.t-btn.blue { background: #eaf2ff; color: #1a5ea8; border-color: #aacbee; }
+.kpi-bar{display:grid;grid-template-columns:repeat(5,1fr);background:#fff;border-bottom:1px solid #ddd;}
+.ki{padding:9px 8px;border-right:1px solid #eee;}
+.ki:last-child{border-right:none;}
+.kl{font-size:8px;font-weight:700;text-transform:uppercase;color:#999;margin-bottom:2px;}
+.kv{font-size:16px;font-weight:700;line-height:1;color:#1a1a1a;}
+.kv.ok{color:#2a7d4f;}.kv.wa{color:#9a5e00;}.kv.da{color:#b02020;}
+.ks{font-size:8px;color:#aaa;margin-top:2px;}
 
-/* ── SECTION HDR ── */
-.sec-hdr { display: flex; justify-content: space-between; align-items: center; padding: 12px 16px 6px; }
-.sec-title { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: #888; }
-.sec-count { font-size: 11px; color: #aaa; }
+.ps{background:#fff;border-bottom:1px solid #ddd;padding:10px 14px;}
+.ps-row{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:5px;}
+.ps-lbl{font-size:9px;font-weight:700;text-transform:uppercase;color:#999;}
+.ps-pct{font-size:20px;font-weight:700;}
+.track{height:5px;background:#e8e8e8;border-radius:3px;overflow:hidden;}
+.tf{height:100%;border-radius:3px;transition:width .5s;}
 
-/* ── SKU LIST ── */
-.sku-list { padding: 0 12px 80px; display: flex; flex-direction: column; gap: 5px; }
+.tb{background:#fff;border-bottom:1px solid #ddd;padding:7px 10px;display:flex;gap:5px;overflow-x:auto;scrollbar-width:none;flex-wrap:wrap;}
+.tb::-webkit-scrollbar{display:none;}
+.fb{font-size:11px;font-weight:600;padding:5px 10px;border-radius:3px;border:1px solid #ccc;color:#666;background:#fff;white-space:nowrap;}
+.fb.on{background:#1a1a1a;color:#fff;border-color:#1a1a1a;}
+.fb.fd.on{background:#fdf0f0;color:#b02020;border-color:#e0a0a0;}
+.fb.fw.on{background:#fdf6ec;color:#9a5e00;border-color:#e0c080;}
+.fb.fo.on{background:#f0f8f4;color:#2a7d4f;border-color:#90cca8;}
+.tsep{width:1px;height:18px;background:#ddd;flex-shrink:0;}
+.tbtn{font-size:11px;font-weight:600;padding:5px 10px;border-radius:3px;border:1px solid #ccc;color:#444;background:#fff;white-space:nowrap;}
+.tbtn.pr{background:#1a1a1a;color:#fff;border-color:#1a1a1a;}
+.tbtn.bl{background:#eaf2ff;color:#1a5ea8;border-color:#aacbee;}
 
-.sku-card {
-background: #fff; border: 1px solid #ddd; border-radius: 6px;
-overflow: hidden; transition: box-shadow .12s;
-}
-.sku-card:hover { box-shadow: 0 1px 6px rgba(0,0,0,.08); }
-.sku-card.st-ok     { border-left: 3px solid #2a7d4f; }
-.sku-card.st-warn   { border-left: 3px solid #c8820a; }
-.sku-card.st-danger { border-left: 3px solid #b02020; }
-.sku-card.st-none   { border-left: 3px solid #ccc; }
-.sku-card.st-over   { border-left: 3px solid #1a5ea8; }
+.sh{display:flex;justify-content:space-between;align-items:center;padding:11px 14px 5px;}
+.st{font-size:10px;font-weight:700;text-transform:uppercase;color:#888;}
+.sc{font-size:11px;color:#aaa;}
 
-.sku-row {
-display: grid; grid-template-columns: 1fr auto;
-gap: 8px; padding: 10px 12px 0; cursor: pointer; align-items: start;
-}
-.sku-name  { font-size: 12px; font-weight: 700; color: #1a1a1a; margin-bottom: 1px; }
-.sku-clave { font-size: 9px; color: #aaa; font-family: ‘Courier New’, monospace; }
-.sku-right { text-align: right; flex-shrink: 0; }
-.sku-pct   { font-size: 20px; font-weight: 700; line-height: 1; }
-.sku-pct.ok     { color: #2a7d4f; }
-.sku-pct.warn   { color: #9a5e00; }
-.sku-pct.danger { color: #b02020; }
-.sku-pct.none   { color: #bbb; }
-.sku-pct.over   { color: #1a5ea8; }
-.sku-ratio { font-size: 10px; color: #999; }
+.sl{padding:0 10px 80px;display:flex;flex-direction:column;gap:5px;}
+.sk{background:#fff;border:1px solid #ddd;border-radius:6px;overflow:hidden;}
+.sk.st-ok{border-left:3px solid #2a7d4f;}.sk.st-wa{border-left:3px solid #c8820a;}
+.sk.st-da{border-left:3px solid #b02020;}.sk.st-no{border-left:3px solid #ccc;}.sk.st-ov{border-left:3px solid #1a5ea8;}
+.sr{display:grid;grid-template-columns:1fr auto;gap:6px;padding:9px 11px 0;cursor:pointer;align-items:start;}
+.sn{font-size:12px;font-weight:700;margin-bottom:1px;}
+.sc2{font-size:9px;color:#bbb;font-family:‘Courier New’,monospace;}
+.srr{text-align:right;}
+.sp{font-size:19px;font-weight:700;line-height:1;}
+.sp.ok{color:#2a7d4f;}.sp.wa{color:#9a5e00;}.sp.da{color:#b02020;}.sp.no{color:#bbb;}.sp.ov{color:#1a5ea8;}
+.srat{font-size:10px;color:#999;}
+.sb{padding:6px 11px 0;}.sbi{height:4px;background:#eee;border-radius:2px;overflow:hidden;}
+.sbf{height:100%;border-radius:2px;transition:width .4s;}
+.bok{background:#2a7d4f;}.bwa{background:#c8820a;}.bda{background:#b02020;}.bno{background:#ccc;}.bov{background:#1a5ea8;}
+.ch{display:flex;gap:4px;padding:5px 11px 9px;flex-wrap:wrap;}
+.cp{font-size:10px;font-weight:600;padding:2px 7px;border-radius:3px;}
+.cp.ok{background:#eaf5f0;color:#2a7d4f;}.cp.wa{background:#fdf6ec;color:#9a5e00;}
+.cp.da{background:#fdf0f0;color:#b02020;}.cp.no{background:#f2f2f2;color:#888;}
+.cp.bl{background:#eaf2ff;color:#1a5ea8;}.cp.gy{background:#f2f2f2;color:#666;font-size:9px;}
 
-.sku-bar-wrap { padding: 6px 12px 0; }
-.sku-bar { height: 4px; background: #eee; border-radius: 2px; overflow: hidden; }
-.sku-bar-fill { height: 100%; border-radius: 2px; transition: width .4s ease; }
-.b-ok     { background: #2a7d4f; }
-.b-warn   { background: #c8820a; }
-.b-danger { background: #b02020; }
-.b-none   { background: #ccc; }
-.b-blue   { background: #1a5ea8; }
+.det{border-top:1px solid #eee;display:none;}
+.det.op{display:block;}
+.ds{padding:10px 11px;border-bottom:1px solid #f0f0f0;}
+.ds:last-child{border-bottom:none;}
+.dt{font-size:9px;font-weight:700;text-transform:uppercase;color:#bbb;margin-bottom:7px;}
+.sg{display:grid;grid-template-columns:repeat(4,1fr);gap:5px;}
+.sb2{background:#f8f8f8;border:1px solid #e8e8e8;border-radius:5px;padding:7px;text-align:center;}
+.sl2{font-size:8px;font-weight:700;text-transform:uppercase;color:#aaa;margin-bottom:2px;}
+.sv{font-size:13px;font-weight:700;}
+.se{font-size:10px;color:#aaa;margin-top:1px;}
+.sp2{font-size:10px;font-weight:700;margin-top:2px;}
+.et{width:100%;border-collapse:collapse;font-size:11px;}
+.et th{font-size:8px;font-weight:700;text-transform:uppercase;color:#aaa;text-align:left;padding:3px 5px;border-bottom:1px solid #eee;}
+.et td{padding:5px 5px;border-bottom:1px solid #f0f0f0;vertical-align:middle;}
+.et tr:last-child td{border-bottom:none;}
+.tt{font-size:9px;font-weight:700;padding:2px 5px;border-radius:3px;text-transform:uppercase;}
+.tp{background:#f0eeff;color:#5533cc;}.ta{background:#eaf2ff;color:#1a5ea8;}.tm{background:#eaf5f0;color:#2a7d4f;}
+.cb{font-size:10px;font-weight:700;padding:3px 8px;border-radius:3px;border:1px solid #90cca8;background:#f0f8f4;color:#2a7d4f;}
+.ctg{font-size:10px;color:#2a7d4f;font-weight:600;}
+.db{background:none;border:none;color:#ddd;font-size:13px;padding:2px 4px;}
+.rf{display:flex;flex-direction:column;gap:6px;}
+.rr{display:flex;gap:5px;}
+.inp{flex:1;background:#fff;border:1px solid #ccc;color:#1a1a1a;font-size:12px;padding:7px 9px;border-radius:4px;outline:none;min-width:0;-webkit-appearance:none;}
+.inp::placeholder{color:#ccc;}
+.isml{flex:0 0 86px;}
+.ra{background:#1a1a1a;color:#fff;font-size:11px;font-weight:700;padding:7px 11px;border:none;border-radius:4px;white-space:nowrap;}
+.ca2{display:flex;gap:5px;padding:7px 11px;flex-wrap:wrap;}
+.ca{font-size:10px;font-weight:600;padding:4px 9px;border-radius:3px;background:none;}
+.ce{border:1px solid #ddd;color:#555;}.cd{border:1px solid #e0a0a0;color:#b02020;}
 
-.sku-chips { display: flex; gap: 4px; padding: 5px 12px 9px; flex-wrap: wrap; align-items: center; }
-.chip {
-font-size: 10px; font-weight: 600; padding: 2px 7px; border-radius: 3px;
-}
-.chip.ok     { background: #eaf5f0; color: #2a7d4f; }
-.chip.warn   { background: #fdf6ec; color: #9a5e00; }
-.chip.danger { background: #fdf0f0; color: #b02020; }
-.chip.none   { background: #f2f2f2; color: #888; }
-.chip.blue   { background: #eaf2ff; color: #1a5ea8; }
-.chip.gray   { background: #f2f2f2; color: #666; font-size: 9px; }
+.fbb{position:fixed;bottom:0;left:0;right:0;background:#fff;border-top:1px solid #ddd;padding:8px 10px;display:flex;gap:5px;z-index:60;}
+.fab{flex:1;font-size:11px;font-weight:700;padding:9px 4px;border-radius:4px;display:flex;align-items:center;justify-content:center;gap:4px;}
+.fab.pr{background:#1a1a1a;color:#fff;border:none;}.fab.sc{background:#fff;color:#444;border:1px solid #ccc;}.fab.bl{background:#eaf2ff;color:#1a5ea8;border:1px solid #aacbee;}
 
-/* ── DETAIL ── */
-.sku-detail { border-top: 1px solid #eee; display: none; }
-.sku-detail.open { display: block; }
+.ov{position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:200;display:flex;align-items:flex-end;justify-content:center;opacity:0;pointer-events:none;transition:opacity .18s;}
+.ov.op{opacity:1;pointer-events:all;}
+.sh2{background:#fff;border-radius:12px 12px 0 0;padding:18px 16px 32px;width:100%;max-width:540px;transform:translateY(14px);transition:transform .18s;max-height:88vh;overflow-y:auto;}
+.ov.op .sh2{transform:translateY(0);}
+.sht{font-size:15px;font-weight:700;margin-bottom:3px;}
+.shs{font-size:11px;color:#888;margin-bottom:14px;line-height:1.5;}
+.fi{margin-bottom:9px;}
+.fi label{font-size:9px;font-weight:700;text-transform:uppercase;color:#999;display:block;margin-bottom:3px;}
+.fi input,.fi select{width:100%;background:#fff;border:1px solid #ccc;color:#1a1a1a;font-size:13px;padding:9px 10px;border-radius:5px;outline:none;-webkit-appearance:none;}
+.br{display:flex;gap:6px;margin-top:14px;}
+.bc{flex:1;background:#fff;border:1px solid #ccc;color:#888;font-size:12px;font-weight:600;padding:10px;border-radius:5px;}
+.bk{flex:2;background:#1a1a1a;color:#fff;font-size:13px;font-weight:700;padding:10px;border-radius:5px;border:none;}
+.bk.bl{background:#1a5ea8;}
+.mg{display:flex;flex-wrap:wrap;gap:5px;margin:8px 0 12px;}
+.mo{font-size:12px;font-weight:600;padding:6px 13px;border-radius:4px;border:1px solid #ccc;color:#666;background:#fff;}
+.mo.on{background:#1a1a1a;color:#fff;border-color:#1a1a1a;}
 
-.det-sec { padding: 10px 12px; border-bottom: 1px solid #f0f0f0; }
-.det-sec:last-child { border-bottom: none; }
-.det-title { font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: #aaa; margin-bottom: 7px; }
+.lw{padding:10px 10px 100px;}
+.li{background:#fff;border:1px solid #ddd;border-radius:6px;padding:10px 12px;font-size:11px;color:#555;line-height:1.6;margin-bottom:10px;}
+.lt{background:#fff;border:1px solid #ddd;border-radius:6px;overflow:hidden;}
+.lr{display:grid;grid-template-columns:68px 58px 1fr;gap:6px;padding:8px 10px;border-bottom:1px solid #f0f0f0;}
+.lr:last-child{border-bottom:none;}
+.lr:nth-child(even){background:#fafafa;}
+.lti{font-size:9px;color:#aaa;font-family:‘Courier New’,monospace;line-height:1.4;}
+.lu{font-size:9px;font-weight:700;padding:2px 6px;border-radius:10px;text-align:center;}
+.u-adrian{background:#1a1a1a;color:#fff;}.u-raul{background:#1a5ea8;color:#fff;}
+.u-cinthya{background:#7b3fb8;color:#fff;}.u-luis{background:#2a7d4f;color:#fff;}
+.la{font-size:11px;color:#333;line-height:1.4;}
+.le{text-align:center;padding:28px;color:#aaa;font-size:12px;}
 
-.sem-grid { display: grid; grid-template-columns: repeat(4,1fr); gap: 5px; }
-.sem-box  { background: #f8f8f8; border: 1px solid #e8e8e8; border-radius: 5px; padding: 7px; text-align: center; }
-.sem-lbl  { font-size: 8px; font-weight: 700; text-transform: uppercase; color: #aaa; margin-bottom: 2px; }
-.sem-cong { font-size: 14px; font-weight: 700; color: #1a1a1a; }
-.sem-ent  { font-size: 10px; color: #aaa; margin-top: 1px; }
-.sem-pct  { font-size: 10px; font-weight: 700; margin-top: 2px; }
+.fcs{display:grid;grid-template-columns:repeat(3,1fr);gap:5px;padding:10px 10px 0;}
+.fci{background:#fff;border:1px solid #ddd;border-radius:5px;padding:8px 10px;}
+.fcl{font-size:8px;font-weight:700;text-transform:uppercase;color:#aaa;margin-bottom:2px;}
+.fcv{font-size:15px;font-weight:700;}
+.fcs2{font-size:9px;color:#aaa;}
+.fcc{background:#fff;border:1px solid #ddd;border-radius:6px;overflow:hidden;margin:10px 10px 0;}
+.fch{display:flex;justify-content:space-between;align-items:center;padding:10px 12px;cursor:pointer;}
+.fct{font-size:12px;font-weight:700;}
+.fcto{font-size:11px;color:#888;}
+.fcb{border-top:1px solid #eee;display:none;}
+.fcb.op{display:block;}
+.fctb{width:100%;border-collapse:collapse;font-size:11px;}
+.fctb th{font-size:8px;font-weight:700;text-transform:uppercase;color:#aaa;text-align:left;padding:6px 8px;border-bottom:1px solid #eee;background:#fafafa;}
+.fctb td{padding:5px 8px;border-bottom:1px solid #f4f4f4;}
+.fctb tr:last-child td{border-bottom:none;}
+.fctb td:nth-child(n+2){font-weight:700;text-align:right;}
+.ftr{font-weight:700;background:#f8f8f8;border-top:2px solid #ddd !important;}
+.fz{color:#ccc;}
 
-/* entregas table */
-.ent-tbl { width: 100%; border-collapse: collapse; font-size: 11px; }
-.ent-tbl th {
-font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: .04em;
-color: #aaa; text-align: left; padding: 4px 6px; border-bottom: 1px solid #eee;
-}
-.ent-tbl td { padding: 6px 6px; border-bottom: 1px solid #f0f0f0; vertical-align: middle; }
-.ent-tbl tr:last-child td { border-bottom: none; }
-.ent-tbl td:nth-child(2) { font-weight: 700; }
-.ttag {
-font-size: 9px; font-weight: 700; padding: 2px 6px; border-radius: 3px;
-text-transform: uppercase;
-}
-.t-prog { background: #f0eeff; color: #5533cc; }
-.t-adic { background: #eaf2ff; color: #1a5ea8; }
-.t-man  { background: #eaf5f0; color: #2a7d4f; }
-.confirm-btn {
-font-size: 10px; font-weight: 700; padding: 3px 8px;
-border-radius: 3px; border: 1px solid #90cca8;
-background: #f0f8f4; color: #2a7d4f; transition: all .12s;
-}
-.confirm-btn:hover { background: #2a7d4f; color: #fff; border-color: #2a7d4f; }
-.conf-tag { font-size: 10px; color: #2a7d4f; font-weight: 600; }
-.del-btn { background: none; border: none; color: #ccc; font-size: 13px; padding: 2px 4px; transition: color .12s; }
-.del-btn:hover { color: #b02020; }
+.gw{padding:10px 10px 80px;display:flex;flex-direction:column;gap:8px;}
+.gc{background:#fff;border:1px solid #ddd;border-radius:6px;overflow:hidden;}
+.gh{display:flex;align-items:center;gap:9px;padding:11px 12px;cursor:pointer;}
+.gn{width:22px;height:22px;border-radius:50%;background:#1a1a1a;color:#fff;font-size:10px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.gtx{flex:1;}.gtt{font-size:12px;font-weight:700;}.gts{font-size:10px;color:#888;margin-top:1px;}
+.gar{font-size:11px;color:#aaa;}
+.gb{padding:10px 12px;display:none;border-top:1px solid #eee;}
+.gb.op{display:block;}
+.gsp{display:flex;gap:8px;padding:7px 0;border-bottom:1px solid #f4f4f4;font-size:11px;color:#444;line-height:1.5;}
+.gsp:last-child{border-bottom:none;}
+.gd{width:5px;height:5px;border-radius:50%;background:#1a1a1a;margin-top:6px;flex-shrink:0;}
 
-/* reg form */
-.reg-form { display: flex; flex-direction: column; gap: 6px; }
-.reg-row  { display: flex; gap: 5px; }
-.inp {
-flex: 1; background: #fff; border: 1px solid #ccc; color: #1a1a1a;
-font-size: 12px; padding: 7px 9px; border-radius: 4px; outline: none; min-width: 0;
-transition: border-color .12s;
-}
-.inp:focus { border-color: #888; }
-.inp::placeholder { color: #bbb; }
-.inp-sm { flex: 0 0 88px; }
-.btn-reg {
-background: #1a1a1a; color: #fff; font-size: 11px; font-weight: 700;
-padding: 7px 12px; border: none; border-radius: 4px; white-space: nowrap;
-}
-
-.card-acts { display: flex; gap: 5px; padding: 8px 12px; flex-wrap: wrap; }
-.ca {
-font-size: 10px; font-weight: 600; padding: 4px 9px; border-radius: 3px;
-background: none; transition: all .12s;
-}
-.ca-edit { border: 1px solid #ddd; color: #555; }
-.ca-edit:hover { border-color: #888; color: #1a1a1a; }
-.ca-del  { border: 1px solid #e0a0a0; color: #b02020; }
-.ca-del:hover  { background: #fdf0f0; }
-
-/* ── FAB ── */
-.fab-bar {
-position: fixed; bottom: 0; left: 0; right: 0;
-background: #fff; border-top: 1px solid #ddd;
-padding: 8px 10px; display: flex; gap: 5px; z-index: 60;
-}
-.fab {
-flex: 1; font-size: 11px; font-weight: 700; padding: 9px 6px;
-border-radius: 4px; display: flex; align-items: center; justify-content: center; gap: 4px;
-}
-.fab.primary { background: #1a1a1a; color: #fff; border: none; }
-.fab.secondary { background: #fff; color: #444; border: 1px solid #ccc; }
-.fab.blue { background: #eaf2ff; color: #1a5ea8; border: 1px solid #aacbee; }
-
-/* ── MODALS ── */
-.overlay {
-position: fixed; inset: 0; background: rgba(0,0,0,.35); z-index: 200;
-display: flex; align-items: flex-end; justify-content: center;
-opacity: 0; pointer-events: none; transition: opacity .18s;
-}
-.overlay.open { opacity: 1; pointer-events: all; }
-.sheet {
-background: #fff; border-radius: 10px 10px 0 0; border: 1px solid #ccc; border-bottom: none;
-padding: 18px 16px 28px; width: 100%; max-width: 540px;
-transform: translateY(14px); transition: transform .18s; max-height: 88vh; overflow-y: auto;
-}
-.overlay.open .sheet { transform: translateY(0); }
-.sh-title { font-size: 15px; font-weight: 700; margin-bottom: 3px; }
-.sh-sub   { font-size: 11px; color: #888; margin-bottom: 14px; line-height: 1.5; }
-.field    { margin-bottom: 9px; }
-.field label {
-font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: .05em;
-color: #999; display: block; margin-bottom: 3px;
-}
-.field input, .field select {
-width: 100%; background: #fff; border: 1px solid #ccc; color: #1a1a1a;
-font-size: 12px; padding: 8px 10px; border-radius: 4px; outline: none; transition: border-color .12s;
-}
-.field input:focus, .field select:focus { border-color: #888; }
-.field select option { background: #fff; }
-.btn-row   { display: flex; gap: 6px; margin-top: 14px; }
-.btn-cancel  { flex:1; background:#fff; border:1px solid #ccc; color:#888; font-size:12px; font-weight:600; padding:10px; border-radius:4px; }
-.btn-confirm { flex:2; background:#1a1a1a; color:#fff; font-size:13px; font-weight:700; padding:10px; border-radius:4px; border:none; }
-.btn-confirm.blue { background: #1a5ea8; }
-
-.mes-grid { display:flex; flex-wrap:wrap; gap:5px; margin:8px 0 12px; }
-.mo { font-size:12px; font-weight:600; padding:6px 13px; border-radius:4px; border:1px solid #ccc; color:#666; background:#fff; transition:all .12s; }
-.mo.on { background:#1a1a1a; color:#fff; border-color:#1a1a1a; }
-
-/* ── FORECAST SECTION ── */
-.forecast-section { padding: 12px 12px 0; }
-.forecast-card {
-background: #fff; border: 1px solid #ddd; border-radius: 6px;
-overflow: hidden; margin-bottom: 5px;
-}
-.fc-header {
-display: flex; justify-content: space-between; align-items: center;
-padding: 10px 14px; cursor: pointer;
-}
-.fc-title { font-size: 12px; font-weight: 700; color: #1a1a1a; }
-.fc-total { font-size: 11px; color: #888; }
-.fc-body  { border-top: 1px solid #eee; display: none; }
-.fc-body.open { display: block; }
-.fc-tbl { width: 100%; border-collapse: collapse; font-size: 11px; }
-.fc-tbl th {
-font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: .04em;
-color: #aaa; text-align: left; padding: 6px 10px; border-bottom: 1px solid #eee;
-background: #fafafa;
-}
-.fc-tbl td { padding: 6px 10px; border-bottom: 1px solid #f4f4f4; }
-.fc-tbl tr:last-child td { border-bottom: none; }
-.fc-tbl td:nth-child(3),
-.fc-tbl td:nth-child(4),
-.fc-tbl td:nth-child(5),
-.fc-tbl td:nth-child(6),
-.fc-tbl td:nth-child(7) { font-size: 11px; font-weight: 700; color: #1a1a1a; text-align: right; }
-.fc-total-row td { font-weight: 700; background: #f8f8f8; border-top: 2px solid #ddd !important; }
-.fc-zero { color: #ccc; }
-
-/* ── GUÍA ── */
-.guide-wrap { padding: 12px 12px 80px; display: flex; flex-direction: column; gap: 10px; }
-.guide-card { background: #fff; border: 1px solid #ddd; border-radius: 6px; overflow: hidden; }
-.guide-hdr {
-display: flex; align-items: center; gap: 10px;
-padding: 12px 14px; cursor: pointer; border-bottom: 1px solid transparent;
-}
-.guide-hdr.open { border-bottom-color: #eee; }
-.guide-num {
-width: 24px; height: 24px; border-radius: 50%; background: #1a1a1a;
-color: #fff; font-size: 11px; font-weight: 700;
-display: flex; align-items: center; justify-content: center; flex-shrink: 0;
-}
-.guide-hdr-text { flex: 1; }
-.guide-hdr-title { font-size: 13px; font-weight: 700; color: #1a1a1a; }
-.guide-hdr-sub   { font-size: 11px; color: #888; margin-top: 1px; }
-.guide-arrow { font-size: 11px; color: #aaa; transition: transform .15s; }
-.guide-arrow.open { transform: rotate(180deg); }
-.guide-body { padding: 12px 14px 14px; display: none; }
-.guide-body.open { display: block; }
-.guide-step {
-display: flex; gap: 9px; padding: 8px 0; border-bottom: 1px solid #f4f4f4;
-font-size: 12px; color: #444; line-height: 1.5;
-}
-.guide-step:last-child { border-bottom: none; }
-.gs-dot { width: 6px; height: 6px; border-radius: 50%; background: #1a1a1a; margin-top: 6px; flex-shrink: 0; }
-.guide-note {
-background: #fdf6ec; border: 1px solid #e8d090; border-radius: 4px;
-padding: 8px 10px; font-size: 11px; color: #7a4f00; margin-top: 10px; line-height: 1.5;
-}
-.guide-note b { color: #5a3800; }
-.guide-tag {
-display: inline-block; font-size: 10px; font-weight: 700; padding: 1px 6px;
-border-radius: 3px; margin: 0 2px;
-}
-.gt-prog { background: #f0eeff; color: #5533cc; }
-.gt-man  { background: #eaf5f0; color: #2a7d4f; }
-.gt-adic { background: #eaf2ff; color: #1a5ea8; }
-.gt-warn { background: #fdf6ec; color: #9a5e00; }
-
-.empty { text-align: center; padding: 36px 20px; color: #aaa; font-size: 13px; }
-
-/* Forecast tab summary */
-.fc-summary {
-display: grid; grid-template-columns: repeat(3,1fr);
-gap: 5px; padding: 10px 12px 0;
-}
-.fc-sum-item { background: #fff; border: 1px solid #ddd; border-radius: 5px; padding: 8px 10px; }
-.fc-sum-lbl { font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; color: #aaa; margin-bottom: 2px; }
-.fc-sum-val { font-size: 16px; font-weight: 700; color: #1a1a1a; }
-.fc-sum-sub { font-size: 9px; color: #aaa; margin-top: 1px; }
+.ld{text-align:center;padding:40px 20px;color:#888;}
+.em{text-align:center;padding:36px 20px;color:#aaa;}
 </style>
 
 </head>
 <body>
 
-<!-- HEADER -->
+<!-- LOGIN -->
 
-<div class="hdr">
-  <div class="hdr-top">
-    <div>
-      <div class="brand-name">Fill Rate Tracker — Sabeamex</div>
-      <div class="brand-sub">PepsiCo · Monarrez · Visibilidad en tiempo real</div>
+<div id="login-screen">
+  <div class="login-box">
+    <div class="login-title">Fill Rate Tracker</div>
+    <div class="login-sub">Sabeamex · PepsiCo / Monarrez</div>
+    <div class="lf">
+      <label>Usuario</label>
+      <input type="text" id="lu" placeholder="Tu usuario" autocomplete="off" autocapitalize="none" autocorrect="off" spellcheck="false">
     </div>
-    <button class="mes-btn" onclick="openMes()">
-      <span id="mes-lbl">MAR 2026</span> ▾
-    </button>
-  </div>
-  <div class="tabs">
-    <button class="tab on"  onclick="setTab('PEPSICO',this)">PepsiCo Directo</button>
-    <button class="tab"     onclick="setTab('MONARREZ',this)">Monarrez</button>
-    <button class="tab"     onclick="setTab('OTROS',this)">Otros</button>
-    <button class="tab"     onclick="setTab('FORECAST',this)">Forecast Abril</button>
-    <button class="tab"     onclick="setTab('GUIA',this)">📋 Guía de uso</button>
-  </div>
-</div>
-
-<!-- KPIs -->
-
-<div class="kpi-bar" id="kpi-bar"></div>
-
-<!-- PROGRESS -->
-
-<div class="prog-strip" id="prog-strip">
-  <div class="ps-row">
-    <span class="ps-lbl">Fill Rate del mes</span>
-    <span class="ps-pct" id="ps-pct">—</span>
-  </div>
-  <div class="track"><div class="track-fill" id="track-fill" style="width:0%"></div></div>
-</div>
-
-<!-- TOOLBAR -->
-
-<div class="toolbar" id="toolbar">
-  <div style="display:flex;gap:4px">
-    <button class="f-btn on"       onclick="setF('all',this)">Todos</button>
-    <button class="f-btn f-danger" onclick="setF('danger',this)">Sin entregar</button>
-    <button class="f-btn f-warn"   onclick="setF('warn',this)">Parcial</button>
-    <button class="f-btn f-ok"     onclick="setF('ok',this)">Completos</button>
-  </div>
-  <div class="tsep"></div>
-  <button class="t-btn primary" onclick="triggerUpload('congelado')">↑ Cargar Congelado</button>
-  <button class="t-btn blue"    onclick="triggerUpload('programacion')">↑ Cargar Programación</button>
-  <button class="t-btn"         onclick="openM('m-sku')">+ SKU manual</button>
-  <input type="file" id="file-congelado"    accept=".xlsx,.xls" style="display:none" onchange="handleUpload('congelado',this)">
-  <input type="file" id="file-programacion" accept=".xlsx,.xls" style="display:none" onchange="handleUpload('programacion',this)">
-</div>
-
-<!-- SECTION HDR -->
-
-<div class="sec-hdr" id="sec-hdr">
-  <span class="sec-title" id="sec-title">SKUs — PepsiCo Directo</span>
-  <span class="sec-count" id="sec-count"></span>
-</div>
-
-<!-- MAIN CONTENT -->
-
-<div id="main-content"></div>
-
-<!-- FAB -->
-
-<div class="fab-bar" id="fab-bar">
-  <button class="fab secondary" onclick="triggerUpload('congelado')">↑ Congelado</button>
-  <button class="fab primary"   onclick="triggerUpload('programacion')">↑ Programación</button>
-  <button class="fab blue"      onclick="openAdic()">+ Adicional</button>
-</div>
-
-<!-- ═══ MODALS ═══ -->
-
-<!-- MES -->
-
-<div class="overlay" id="m-mes">
-  <div class="sheet">
-    <div class="sh-title">Seleccionar mes</div>
-    <div class="field"><label>Año</label><input id="in-anio" type="number" value="2026" min="2024" max="2030"></div>
-    <div class="mes-grid" id="mes-grid"></div>
-    <div class="btn-row"><button class="btn-cancel" onclick="closeM('m-mes')">Cerrar</button></div>
-  </div>
-</div>
-
-<!-- ADD SKU -->
-
-<div class="overlay" id="m-sku">
-  <div class="sheet">
-    <div class="sh-title">Agregar SKU manual</div>
-    <div class="sh-sub">O usa "↑ Cargar Congelado" para importar el Excel completo automáticamente.</div>
-    <div class="field"><label>Nombre corto</label><input id="in-nom" placeholder="Ej: CHEETOS XFH COMPARTE"></div>
-    <div class="field"><label>Clave PepsiCo</label><input id="in-clv" placeholder="Ej: CHEETOS XFH COMP MB 145GRX14X1"></div>
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
-      <div class="field"><label>Congelado W10</label><input id="in-c10" type="number" min="0" placeholder="0"></div>
-      <div class="field"><label>Congelado W11</label><input id="in-c11" type="number" min="0" placeholder="0"></div>
-      <div class="field"><label>Congelado W12</label><input id="in-c12" type="number" min="0" placeholder="0"></div>
-      <div class="field"><label>Congelado W13</label><input id="in-c13" type="number" min="0" placeholder="0"></div>
+    <div class="lf">
+      <label>Contraseña</label>
+      <input type="password" id="lp" placeholder="Tu contraseña" autocomplete="off">
     </div>
-    <div class="btn-row">
-      <button class="btn-cancel" onclick="closeM('m-sku')">Cancelar</button>
-      <button class="btn-confirm" onclick="addSkuManual()">Agregar</button>
+    <button class="login-btn" id="login-btn">Entrar</button>
+    <div class="login-err" id="lerr"></div>
+  </div>
+</div>
+
+<!-- APP -->
+
+<div id="app">
+  <div class="hdr">
+    <div class="hdr-top">
+      <div><div class="brand-name">Fill Rate — Sabeamex</div><div class="brand-sub">PepsiCo · Monarrez · Tiempo real</div></div>
+      <div class="hdr-right">
+        <span class="user-tag" id="utag">—</span>
+        <div style="display:flex;align-items:center;gap:3px">
+          <div class="sdot" id="sdot"></div>
+          <span class="slbl" id="slbl">Local</span>
+        </div>
+        <button class="mes-btn" onclick="openMes()"><span id="mlbl">MAR 2026</span> ▾</button>
+        <button class="logout-btn" onclick="doLogout()">Salir</button>
+      </div>
+    </div>
+    <div class="tabs">
+      <button class="tab on"  onclick="setTab('PEPSICO',this)">PepsiCo</button>
+      <button class="tab"     onclick="setTab('MONARREZ',this)">Monarrez</button>
+      <button class="tab"     onclick="setTab('OTROS',this)">Otros</button>
+      <button class="tab"     onclick="setTab('FC',this)">Forecast Abr</button>
+      <button class="tab"     onclick="setTab('GUIA',this)">📋 Guía</button>
+      <button class="tab"     onclick="setTab('LOG',this)">🕓 Actividad</button>
     </div>
   </div>
-</div>
-
-<!-- EDIT CONGELADO -->
-
-<div class="overlay" id="m-cong">
-  <div class="sheet">
-    <div class="sh-title">Editar Congelado</div>
-    <div class="field"><label>SKU</label><select id="sel-csk"></select></div>
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
-      <div class="field"><label>W10</label><input id="in-nc10" type="number" min="0"></div>
-      <div class="field"><label>W11</label><input id="in-nc11" type="number" min="0"></div>
-      <div class="field"><label>W12</label><input id="in-nc12" type="number" min="0"></div>
-      <div class="field"><label>W13</label><input id="in-nc13" type="number" min="0"></div>
+  <div class="kpi-bar" id="kbar"></div>
+  <div class="ps" id="pstrip">
+    <div class="ps-row"><span class="ps-lbl">Fill Rate del mes</span><span class="ps-pct" id="ppct">—</span></div>
+    <div class="track"><div class="tf" id="tfill" style="width:0%"></div></div>
+  </div>
+  <div class="tb" id="tbar">
+    <div style="display:flex;gap:4px">
+      <button class="fb on"  onclick="setF('all',this)">Todos</button>
+      <button class="fb fd"  onclick="setF('da',this)">Sin entregar</button>
+      <button class="fb fw"  onclick="setF('wa',this)">Parcial</button>
+      <button class="fb fo"  onclick="setF('ok',this)">Completos</button>
     </div>
-    <div class="btn-row">
-      <button class="btn-cancel" onclick="closeM('m-cong')">Cancelar</button>
-      <button class="btn-confirm" onclick="saveCong()">Guardar</button>
-    </div>
+    <div class="tsep"></div>
+    <button class="tbtn pr" onclick="tup('c')">↑ Congelado</button>
+    <button class="tbtn bl" onclick="tup('p')">↑ Programación</button>
+    <button class="tbtn"    onclick="openM('msku')">+ SKU</button>
+    <input type="file" id="fc" accept=".xlsx,.xls" style="display:none" onchange="hup('c',this)">
+    <input type="file" id="fp" accept=".xlsx,.xls" style="display:none" onchange="hup('p',this)">
+  </div>
+  <div class="sh" id="sechdr"><span class="st" id="sectit">SKUs — PepsiCo</span><span class="sc" id="seccnt"></span></div>
+  <div id="mc"><div class="ld">Cargando...</div></div>
+  <div class="fbb" id="fbb">
+    <button class="fab sc" onclick="tup('c')">↑ Congelado</button>
+    <button class="fab pr" onclick="tup('p')">↑ Programación</button>
+    <button class="fab bl" onclick="openAdic()">+ Adicional</button>
   </div>
 </div>
 
-<!-- ADICIONAL -->
+<!-- MODALS -->
 
-<div class="overlay" id="m-adic">
-  <div class="sheet">
-    <div class="sh-title">Registrar Adicional</div>
-    <div class="sh-sub">Volumen de oportunidad fuera del congelado. Se suma al total entregado.</div>
-    <div class="field"><label>SKU</label><select id="sel-ask"></select></div>
-    <div class="field"><label>Cajas adicionales</label><input id="in-acnt" type="number" min="1" placeholder="0"></div>
-    <div class="btn-row">
-      <button class="btn-cancel" onclick="closeM('m-adic')">Cancelar</button>
-      <button class="btn-confirm blue" onclick="saveAdic()">Confirmar</button>
-    </div>
+<div class="ov" id="mmes"><div class="sh2">
+  <div class="sht">Seleccionar mes</div>
+  <div class="fi"><label>Año</label><input id="ianio" type="number" value="2026" min="2024" max="2030"></div>
+  <div class="mg" id="mgrid"></div>
+  <div class="br"><button class="bc" onclick="closeM('mmes')">Cerrar</button></div>
+</div></div>
+
+<div class="ov" id="msku"><div class="sh2">
+  <div class="sht">Agregar SKU</div>
+  <div class="shs">O usa "↑ Congelado" para importar el Excel.</div>
+  <div class="fi"><label>Nombre corto</label><input id="inom" placeholder="Ej: CHEETOS XFH COMPARTE"></div>
+  <div class="fi"><label>Clave PepsiCo</label><input id="inclv" placeholder="Ej: CHEETOS XFH COMP MB 145GRX14X1"></div>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+    <div class="fi"><label>W10</label><input id="ic10" type="number" min="0" placeholder="0"></div>
+    <div class="fi"><label>W11</label><input id="ic11" type="number" min="0" placeholder="0"></div>
+    <div class="fi"><label>W12</label><input id="ic12" type="number" min="0" placeholder="0"></div>
+    <div class="fi"><label>W13</label><input id="ic13" type="number" min="0" placeholder="0"></div>
   </div>
-</div>
+  <div class="br"><button class="bc" onclick="closeM('msku')">Cancelar</button><button class="bk" onclick="addSku()">Agregar</button></div>
+</div></div>
+
+<div class="ov" id="mcong"><div class="sh2">
+  <div class="sht">Editar Congelado</div>
+  <div class="fi"><label>SKU</label><select id="scsk"></select></div>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+    <div class="fi"><label>W10</label><input id="inc10" type="number" min="0"></div>
+    <div class="fi"><label>W11</label><input id="inc11" type="number" min="0"></div>
+    <div class="fi"><label>W12</label><input id="inc12" type="number" min="0"></div>
+    <div class="fi"><label>W13</label><input id="inc13" type="number" min="0"></div>
+  </div>
+  <div class="br"><button class="bc" onclick="closeM('mcong')">Cancelar</button><button class="bk" onclick="saveCong()">Guardar</button></div>
+</div></div>
+
+<div class="ov" id="madic"><div class="sh2">
+  <div class="sht">Registrar Adicional</div>
+  <div class="shs">Volumen fuera del congelado.</div>
+  <div class="fi"><label>SKU</label><select id="sask"></select></div>
+  <div class="fi"><label>Cajas adicionales</label><input id="iacnt" type="number" min="1" placeholder="0"></div>
+  <div class="br"><button class="bc" onclick="closeM('madic')">Cancelar</button><button class="bk bl" onclick="saveAdic()">Confirmar</button></div>
+</div></div>
 
 <script>
-// ══════════════════════════════════════════
-// CONSTANTS & DATA
-// ══════════════════════════════════════════
-const MESES = ['ENE','FEB','MAR','ABR','MAY','JUN','JUL','AGO','SEP','OCT','NOV','DIC'];
-const SEMS  = ['W10','W11','W12','W13'];
-
-// Seed marzo PepsiCo (congelado real)
-const SEED_MAR = [
-  {nom:"CHEETOS BOLITAS COMPARTE",     clave:"CHEETOS BOLITAS MB RS NV 110GRX17X1",      c:[63,63,63,63]},
-  {nom:"CHEETOS COLMILLOS COMPARTE",   clave:"CHEETOS COLMI GD MB NV 100GRX10X1",        c:[318,318,318,318]},
-  {nom:"CHEETOS XFH COMPARTE",         clave:"CHEETOS XFH COMP MB 145GRX14X1",           c:[275,275,275,275]},
-  {nom:"CHEETOS POFFS COMPARTE",       clave:"CHEETOS POFFS MB NV 110GRX17X1",           c:[56,56,56,56]},
-  {nom:"CHEETOS TORCIDITOS COMPARTE",  clave:"CHEETOS TOR COMP HBSF RS NV 145GRX14X1",  c:[66,66,66,66]},
-  {nom:"CHURRUMAIS LIMÓN COMPARTE",    clave:"CHURRUMAIS LIMON HBSF2 185GRX15X1",       c:[399,399,399,399]},
-  {nom:"CHURRUMAIS FH COMPARTE",       clave:"CHURRUMAIS FLAMIN HOT MB 185GRX20X1",      c:[135,135,135,135]},
-  {nom:"CRUJITOS COMPARTE",            clave:"CRUJITOS COMP HBSF 120GRX17X1",           c:[635,635,635,635]},
-  {nom:"DORITOS FH FAMILIAR",          clave:"DORITOS FH FAM HBSF RS 223GRX10X1",       c:[29,29,29,29]},
-  {nom:"DORITOS INCOGNITA FAMILIAR",   clave:"DORITOS INCOG HBSF 223GRX10X1",           c:[43,43,43,43]},
-  {nom:"DORITOS NACHO COMPARTE",       clave:"DORITOS NACHO HBSF2 146GRX15X1",          c:[389,389,389,389]},
-  {nom:"FRITOS CHORIZO COMPARTE",      clave:"FRITOS CHOR HBSF2 RS 170GRX13X1",         c:[99,99,99,99]},
-  {nom:"PAKETAXO BOTANERO FAMILIAR",   clave:"PAKETAXO BOT HBSF2 RS 255GRX8X1",        c:[148,148,148,148]},
-  {nom:"PAKETAXO MEZCLADITO FAMILIAR", clave:"PAKETAXO MEZ HBSF2 RS2 265GRX8X1",       c:[159,159,159,159]},
-  {nom:"PAKETAXO PASUMECHA FAMILIAR",  clave:"PAKETAXO XFH HBSF RS2 215GRX9X1",        c:[133,133,133,133]},
-  {nom:"PAKETAXO QUEXO FAMILIAR",      clave:"PAKETAXO QUEXO HBSF2 208GRX9X1",         c:[146,146,146,146]},
-  {nom:"RANCHERITOS COMPARTE",         clave:"RANCHERITOS HBSF2 RS 145GRX14X1",         c:[318,318,318,318]},
-  {nom:"RUFFLES QUESO COMPARTE",       clave:"RUFFLES Q COMP HBSF2 120GRX20X1",        c:[210,210,210,210]},
-  {nom:"SABRITAS ADOBADAS COMPARTE",   clave:"SABRITAS ADOB PRA HBSF FUP 105GRX20X1", c:[117,117,117,117]},
-  {nom:"SABRITAS RCRUJ FH COMPARTE",   clave:"SABRITAS RC FH HBSF RV CP 100GRX20X1",  c:[326,326,326,326]},
-  {nom:"SABRITONES COMPARTE",          clave:"SABRITONES RS HBSF 160GRX6X1",           c:[225,225,225,225]},
-  {nom:"TOSTITOS XFH COMPARTE",        clave:"TOSTITOS XFH HBSF RS 175GRX14X1",       c:[264,264,264,264]},
-  {nom:"TOSTITOS SALSA VERDE COMP",    clave:"TOSTITOS SV COMP HBSF RS 175GRX14X1",   c:[197,197,197,197]},
-];
-const SEED_PROG_MAR = {
-  "CHEETOS COLMILLOS COMPARTE":   [{f:"29/01",cant:342,sem:"W04",conf:true}],
-  "RANCHERITOS COMPARTE":         [{f:"29/01",cant:561,sem:"W04",conf:true},{f:"18/03",cant:49,sem:"W12",conf:false}],
-  "TOSTITOS XFH COMPARTE":        [{f:"29/01",cant:724,sem:"W02",conf:true},{f:"17/03",cant:264,sem:"W12",conf:false},{f:"25/03",cant:264,sem:"W13",conf:false}],
-  "TOSTITOS SALSA VERDE COMP":    [{f:"29/01",cant:119,sem:"W04",conf:true}],
-  "CHEETOS POFFS COMPARTE":       [{f:"25/03",cant:56,sem:"W13",conf:false}],
-  "SABRITONES COMPARTE":          [{f:"18/03",cant:117,sem:"W12",conf:false},{f:"25/03",cant:62,sem:"W13",conf:false}],
-  "DORITOS INCOGNITA FAMILIAR":   [{f:"25/03",cant:46,sem:"W13",conf:false}],
-  "SABRITAS ADOBADAS COMPARTE":   [{f:"25/03",cant:49,sem:"W13",conf:false}],
+// ═══════════════════════════════
+// USERS — login sin Firebase
+// ═══════════════════════════════
+const USERS={
+  adrian:{p:'adrian123',d:'Adrian'},
+  raul:{p:'raul123',d:'Raul'},
+  cinthya:{p:'cinthya123',d:'Cinthya'},
+  luis:{p:'luis123',d:'Luis'}
 };
+let CU=null;
 
-// Forecast Abril (real del archivo)
-const FORECAST_ABRIL = [
-  {nom:"CHEETOS BOLITAS COMPARTE",     clave:"CHEETOS BOLITAS MB RS NV 110GRX17X1",      w:[735,735,735,735]},
-  {nom:"CHEETOS COLMILLOS COMPARTE",   clave:"CHEETOS COLMI GD MB NV 100GRX10X1",        w:[980,980,980,980]},
-  {nom:"CHEETOS XFH COMPARTE",         clave:"CHEETOS XFH COMP MB 145GRX14X1",           w:[2100,2100,2100,2100]},
-  {nom:"CHEETOS POFFS COMPARTE",       clave:"CHEETOS POFFS MB NV 110GRX17X1",           w:[147,147,147,0]},
-  {nom:"CHEETOS TORCIDITOS COMPARTE",  clave:"CHEETOS TOR COMP HBSF RS NV 145GRX14X1",  w:[0,0,0,0]},
-  {nom:"CHURRUMAIS LIMÓN COMPARTE",    clave:"CHURRUMAIS LIMON HBSF2 185GRX15X1",       w:[0,0,0,0]},
-  {nom:"CHURRUMAIS FH COMPARTE",       clave:"CHURRUMAIS FLAMIN HOT MB 185GRX20X1",      w:[0,0,0,0]},
-  {nom:"CRUJITOS COMPARTE",            clave:"CRUJITOS COMP HBSF 120GRX17X1",           w:[245,245,245,245]},
-  {nom:"DORITOS FH FAMILIAR",          clave:"DORITOS FH FAM HBSF RS 223GRX10X1",       w:[735,735,735,735]},
-  {nom:"DORITOS INCOGNITA FAMILIAR",   clave:"DORITOS INCOG HBSF 223GRX10X1",           w:[980,980,980,980]},
-  {nom:"DORITOS NACHO COMPARTE",       clave:"DORITOS NACHO HBSF2 146GRX15X1",          w:[735,735,735,735]},
-  {nom:"FRITOS CHORIZO COMPARTE",      clave:"FRITOS CHOR HBSF2 RS 170GRX13X1",         w:[490,490,490,490]},
-  {nom:"PAKETAXO BOTANERO FAMILIAR",   clave:"PAKETAXO BOT HBSF2 RS 255GRX8X1",        w:[1029,1029,1029,1029]},
-  {nom:"PAKETAXO MEZCLADITO FAMILIAR", clave:"PAKETAXO MEZ HBSF2 RS2 265GRX8X1",       w:[490,490,490,490]},
-  {nom:"PAKETAXO PASUMECHA FAMILIAR",  clave:"PAKETAXO XFH HBSF RS2 215GRX9X1",        w:[2100,2100,2100,2100]},
-  {nom:"PAKETAXO QUEXO FAMILIAR",      clave:"PAKETAXO QUEXO HBSF2 208GRX9X1",         w:[1029,1029,1029,1029]},
-  {nom:"RANCHERITOS COMPARTE",         clave:"RANCHERITOS HBSF2 RS 145GRX14X1",         w:[980,980,980,980]},
-  {nom:"RUFFLES QUESO COMPARTE",       clave:"RUFFLES Q COMP HBSF2 120GRX20X1",        w:[147,147,0,0]},
-  {nom:"SABRITAS ADOBADAS COMPARTE",   clave:"SABRITAS ADOB PRA HBSF FUP 105GRX20X1", w:[0,0,0,0]},
-  {nom:"SABRITAS RCRUJ FH COMPARTE",   clave:"SABRITAS RC FH HBSF RV CP 100GRX20X1",  w:[980,980,980,980]},
-  {nom:"SABRITONES COMPARTE",          clave:"SABRITONES RS HBSF 160GRX6X1",           w:[980,980,980,980]},
-  {nom:"TOSTITOS XFH COMPARTE",        clave:"TOSTITOS XFH HBSF RS 175GRX14X1",       w:[735,735,735,735]},
-  {nom:"TOSTITOS SALSA VERDE COMP",    clave:"TOSTITOS SV COMP HBSF RS 175GRX14X1",   w:[735,735,735,735]},
+function doLogin(){
+  const u=document.getElementById('lu').value.trim().toLowerCase();
+  const p=document.getElementById('lp').value;
+  const e=document.getElementById('lerr');
+  if(USERS[u]&&USERS[u].p===p){
+    CU={k:u,d:USERS[u].d};
+    e.textContent='';
+    document.getElementById('login-screen').style.display='none';
+    document.getElementById('app').style.display='block';
+    document.getElementById('utag').textContent='👤 '+CU.d;
+    initData();
+    logA('login','Inició sesión');
+  } else {
+    e.textContent='Usuario o contraseña incorrectos.';
+    document.getElementById('lp').value='';
+  }
+}
+document.getElementById('login-btn').addEventListener('click',doLogin);
+document.getElementById('lp').addEventListener('keydown',e=>{if(e.key==='Enter')doLogin();});
+document.getElementById('lu').addEventListener('keydown',e=>{if(e.key==='Enter')document.getElementById('lp').focus();});
+
+function doLogout(){
+  logA('logout','Cerró sesión');
+  CU=null;
+  document.getElementById('login-screen').style.display='flex';
+  document.getElementById('app').style.display='none';
+  document.getElementById('lu').value='';
+  document.getElementById('lp').value='';
+}
+
+// ═══════════════════════════════
+// STATE & STORAGE
+// ═══════════════════════════════
+const MESES=['ENE','FEB','MAR','ABR','MAY','JUN','JUL','AGO','SEP','OCT','NOV','DIC'];
+const SEMS=['W10','W11','W12','W13'];
+let ST={mes:{m:2,y:2026},tab:'PEPSICO',provs:{PEPSICO:{skus:[]},MONARREZ:{skus:[]},OTROS:{skus:[]}}};
+let ALOG=[];
+let openD={},openFC={},openG={},filt='all';
+let fbOk=false, saveTimer=null;
+
+const SEED=[
+  {n:"CHEETOS BOLITAS COMPARTE",     c:"CHEETOS BOLITAS MB RS NV 110GRX17X1",      w:[63,63,63,63]},
+  {n:"CHEETOS COLMILLOS COMPARTE",   c:"CHEETOS COLMI GD MB NV 100GRX10X1",        w:[318,318,318,318]},
+  {n:"CHEETOS XFH COMPARTE",         c:"CHEETOS XFH COMP MB 145GRX14X1",           w:[275,275,275,275]},
+  {n:"CHEETOS POFFS COMPARTE",       c:"CHEETOS POFFS MB NV 110GRX17X1",           w:[56,56,56,56]},
+  {n:"CHEETOS TORCIDITOS COMPARTE",  c:"CHEETOS TOR COMP HBSF RS NV 145GRX14X1",  w:[66,66,66,66]},
+  {n:"CHURRUMAIS LIMÓN COMPARTE",    c:"CHURRUMAIS LIMON HBSF2 185GRX15X1",       w:[399,399,399,399]},
+  {n:"CHURRUMAIS FH COMPARTE",       c:"CHURRUMAIS FLAMIN HOT MB 185GRX20X1",      w:[135,135,135,135]},
+  {n:"CRUJITOS COMPARTE",            c:"CRUJITOS COMP HBSF 120GRX17X1",           w:[635,635,635,635]},
+  {n:"DORITOS FH FAMILIAR",          c:"DORITOS FH FAM HBSF RS 223GRX10X1",       w:[29,29,29,29]},
+  {n:"DORITOS INCOGNITA FAMILIAR",   c:"DORITOS INCOG HBSF 223GRX10X1",           w:[43,43,43,43]},
+  {n:"DORITOS NACHO COMPARTE",       c:"DORITOS NACHO HBSF2 146GRX15X1",          w:[389,389,389,389]},
+  {n:"FRITOS CHORIZO COMPARTE",      c:"FRITOS CHOR HBSF2 RS 170GRX13X1",         w:[99,99,99,99]},
+  {n:"PAKETAXO BOTANERO FAMILIAR",   c:"PAKETAXO BOT HBSF2 RS 255GRX8X1",        w:[148,148,148,148]},
+  {n:"PAKETAXO MEZCLADITO FAMILIAR", c:"PAKETAXO MEZ HBSF2 RS2 265GRX8X1",       w:[159,159,159,159]},
+  {n:"PAKETAXO PASUMECHA FAMILIAR",  c:"PAKETAXO XFH HBSF RS2 215GRX9X1",        w:[133,133,133,133]},
+  {n:"PAKETAXO QUEXO FAMILIAR",      c:"PAKETAXO QUEXO HBSF2 208GRX9X1",         w:[146,146,146,146]},
+  {n:"RANCHERITOS COMPARTE",         c:"RANCHERITOS HBSF2 RS 145GRX14X1",         w:[318,318,318,318]},
+  {n:"RUFFLES QUESO COMPARTE",       c:"RUFFLES Q COMP HBSF2 120GRX20X1",        w:[210,210,210,210]},
+  {n:"SABRITAS ADOBADAS COMPARTE",   c:"SABRITAS ADOB PRA HBSF FUP 105GRX20X1", w:[117,117,117,117]},
+  {n:"SABRITAS RCRUJ FH COMPARTE",   c:"SABRITAS RC FH HBSF RV CP 100GRX20X1",  w:[326,326,326,326]},
+  {n:"SABRITONES COMPARTE",          c:"SABRITONES RS HBSF 160GRX6X1",           w:[225,225,225,225]},
+  {n:"TOSTITOS XFH COMPARTE",        c:"TOSTITOS XFH HBSF RS 175GRX14X1",       w:[264,264,264,264]},
+  {n:"TOSTITOS SALSA VERDE COMP",    c:"TOSTITOS SV COMP HBSF RS 175GRX14X1",   w:[197,197,197,197]},
+];
+const SPROG={
+  "CHEETOS COLMILLOS COMPARTE":  [{f:"29/01",cant:342,sem:"W04",ok:true}],
+  "RANCHERITOS COMPARTE":        [{f:"29/01",cant:561,sem:"W04",ok:true},{f:"18/03",cant:49,sem:"W12",ok:false}],
+  "TOSTITOS XFH COMPARTE":       [{f:"29/01",cant:724,sem:"W02",ok:true},{f:"17/03",cant:264,sem:"W12",ok:false},{f:"25/03",cant:264,sem:"W13",ok:false}],
+  "TOSTITOS SALSA VERDE COMP":   [{f:"29/01",cant:119,sem:"W04",ok:true}],
+  "CHEETOS POFFS COMPARTE":      [{f:"25/03",cant:56,sem:"W13",ok:false}],
+  "SABRITONES COMPARTE":         [{f:"18/03",cant:117,sem:"W12",ok:false},{f:"25/03",cant:62,sem:"W13",ok:false}],
+  "DORITOS INCOGNITA FAMILIAR":  [{f:"25/03",cant:46,sem:"W13",ok:false}],
+  "SABRITAS ADOBADAS COMPARTE":  [{f:"25/03",cant:49,sem:"W13",ok:false}],
+};
+const FA=[
+  {n:"CHEETOS BOLITAS COMPARTE",w:[735,735,735,735]},{n:"CHEETOS COLMILLOS COMPARTE",w:[980,980,980,980]},
+  {n:"CHEETOS XFH COMPARTE",w:[2100,2100,2100,2100]},{n:"CHEETOS POFFS COMPARTE",w:[147,147,147,0]},
+  {n:"CHEETOS TORCIDITOS COMPARTE",w:[0,0,0,0]},{n:"CHURRUMAIS LIMÓN COMPARTE",w:[0,0,0,0]},
+  {n:"CHURRUMAIS FH COMPARTE",w:[0,0,0,0]},{n:"CRUJITOS COMPARTE",w:[245,245,245,245]},
+  {n:"DORITOS FH FAMILIAR",w:[735,735,735,735]},{n:"DORITOS INCOGNITA FAMILIAR",w:[980,980,980,980]},
+  {n:"DORITOS NACHO COMPARTE",w:[735,735,735,735]},{n:"FRITOS CHORIZO COMPARTE",w:[490,490,490,490]},
+  {n:"PAKETAXO BOTANERO FAMILIAR",w:[1029,1029,1029,1029]},{n:"PAKETAXO MEZCLADITO FAMILIAR",w:[490,490,490,490]},
+  {n:"PAKETAXO PASUMECHA FAMILIAR",w:[2100,2100,2100,2100]},{n:"PAKETAXO QUEXO FAMILIAR",w:[1029,1029,1029,1029]},
+  {n:"RANCHERITOS COMPARTE",w:[980,980,980,980]},{n:"RUFFLES QUESO COMPARTE",w:[147,147,0,0]},
+  {n:"SABRITAS ADOBADAS COMPARTE",w:[0,0,0,0]},{n:"SABRITAS RCRUJ FH COMPARTE",w:[980,980,980,980]},
+  {n:"SABRITONES COMPARTE",w:[980,980,980,980]},{n:"TOSTITOS XFH COMPARTE",w:[735,735,735,735]},
+  {n:"TOSTITOS SALSA VERDE COMP",w:[735,735,735,735]},
 ];
 
-// ══════════════════════════════════════════
-// STATE
-// ══════════════════════════════════════════
-let ST = JSON.parse(localStorage.getItem('sbmx_v5') || 'null');
-if (!ST) {
-  ST = {
-    mes: {m:2, y:2026},
-    tab: 'PEPSICO',
-    provs: {
-      PEPSICO:  {skus:[]},
-      MONARREZ: {skus:[]},
-      OTROS:    {skus:[]}
-    }
-  };
-  const key = 'MAR-2026';
-  SEED_MAR.forEach(s => {
-    const sku = {nom:s.nom, clave:s.clave, congelados:{}, entregas:{}, adicionales:{}};
-    sku.congelados[key] = {W10:s.c[0],W11:s.c[1],W12:s.c[2],W13:s.c[3]};
-    sku.entregas[key]   = (SEED_PROG_MAR[s.nom]||[]).map(e=>({fecha:e.f,cant:e.cant,tipo:'prog',sem:e.sem,confirmado:e.conf}));
-    sku.adicionales[key]= 0;
-    ST.provs.PEPSICO.skus.push(sku);
-  });
-  save();
+function pad(n){return String(n).padStart(2,'0');}
+
+function localSave(){
+  try{
+    localStorage.setItem('sbmx_data',JSON.stringify(ST));
+    localStorage.setItem('sbmx_log',JSON.stringify(ALOG));
+  }catch(e){}
+}
+function localLoad(){
+  try{
+    const d=localStorage.getItem('sbmx_data');
+    const l=localStorage.getItem('sbmx_log');
+    if(d) ST=JSON.parse(d);
+    if(l) ALOG=JSON.parse(l);
+    if(!ST.provs) ST.provs={};
+    if(!ST.provs.PEPSICO)  ST.provs.PEPSICO={skus:[]};
+    if(!ST.provs.MONARREZ) ST.provs.MONARREZ={skus:[]};
+    if(!ST.provs.OTROS)    ST.provs.OTROS={skus:[]};
+  }catch(e){}
 }
 
-function save() { localStorage.setItem('sbmx_v5', JSON.stringify(ST)); }
-function mk()   { return `${MESES[ST.mes.m]}-${ST.mes.y}`; }
-
-// ══════════════════════════════════════════
-// CALCS
-// ══════════════════════════════════════════
-function gc(sku) { const c=sku.congelados[mk()]||{}; return (c.W10||0)+(c.W11||0)+(c.W12||0)+(c.W13||0); }
-function ge(sku) { return (sku.entregas[mk()]||[]).filter(e=>e.confirmado!==false).reduce((a,e)=>a+e.cant,0); }
-function gp(sku) { return (sku.entregas[mk()]||[]).filter(e=>e.confirmado===false).reduce((a,e)=>a+e.cant,0); }
-function ga(sku) { return sku.adicionales[mk()]||0; }
-function gpct(sku){ const c=gc(sku); if(!c) return 0; return Math.min(999,Math.round((ge(sku)/c)*100)); }
-function gst(sku) {
-  const c=gc(sku),p=gpct(sku);
-  if(!c) return 'none';
-  if(p>100) return 'over';
-  if(p>=90) return 'ok';
-  if(p>=30) return 'warn';
-  return 'danger';
-}
-function glbl(st,p){
-  if(st==='none')  return 'Sin congelado';
-  if(st==='over')  return 'Sobre entregado';
-  if(p>=100) return 'Completo ✓';
-  if(p>=90)  return 'Casi completo';
-  if(p>=30)  return 'En proceso';
-  if(p>0)    return 'Atrasado';
-  return 'Sin entregas';
-}
-
-// ══════════════════════════════════════════
-// FILTER
-// ══════════════════════════════════════════
-let filt = 'all';
-let openD = {};
-let openFC = {};
-let openGuide = {};
-
-function setF(f,el){
-  filt=f;
-  document.querySelectorAll('.f-btn').forEach(b=>b.classList.remove('on'));
-  el.classList.add('on');
+function initData(){
+  localLoad();
+  // Check if PEPSICO has no skus → load seed
+  if(!ST.provs.PEPSICO.skus.length){
+    const key='MAR-2026';
+    SEED.forEach(s=>{
+      const sku={nom:s.n,clave:s.c,congelados:{},entregas:{},adicionales:{}};
+      sku.congelados[key]={W10:s.w[0],W11:s.w[1],W12:s.w[2],W13:s.w[3]};
+      sku.entregas[key]=(SPROG[s.n]||[]).map(e=>({fecha:e.f,cant:e.cant,tipo:'prog',sem:e.sem,confirmado:e.ok}));
+      sku.adicionales[key]=0;
+      ST.provs.PEPSICO.skus.push(sku);
+    });
+    localSave();
+  }
+  // Try Firebase in background
+  tryFirebase();
+  setSyncStatus('ok','Local ✓');
   render();
 }
-function fskip(sku){
-  if(filt==='all') return false;
-  const st=gst(sku);
-  if(filt==='danger') return !(st==='danger'||st==='none');
-  if(filt==='warn')   return st!=='warn';
-  if(filt==='ok')     return !(st==='ok'||st==='over');
-  return false;
+
+function setSyncStatus(s,l){
+  const d=document.getElementById('sdot');
+  const lb=document.getElementById('slbl');
+  if(!d||!lb)return;
+  d.className='sdot '+(s==='ok'?'ok':s==='er'?'er':'sy');
+  lb.textContent=l;
 }
 
-// ══════════════════════════════════════════
-// RENDER
-// ══════════════════════════════════════════
-function render(){
-  document.getElementById('mes-lbl').textContent = `${MESES[ST.mes.m]} ${ST.mes.y}`;
+function save(){
+  localSave();
+  if(fbOk) fbSave();
+}
 
-  const isSpecial = ST.tab==='FORECAST'||ST.tab==='GUIA';
-  document.getElementById('kpi-bar').style.display    = isSpecial?'none':'grid';
-  document.getElementById('prog-strip').style.display = isSpecial?'none':'block';
-  document.getElementById('toolbar').style.display    = isSpecial?'none':'flex';
-  document.getElementById('sec-hdr').style.display    = isSpecial?'none':'flex';
-  document.getElementById('fab-bar').style.display    = isSpecial?'none':'flex';
-
-  if(ST.tab==='FORECAST'){ renderForecast(); return; }
-  if(ST.tab==='GUIA')    { renderGuia();     return; }
-
-  const skus = ST.provs[ST.tab].skus;
-  const vis  = skus.filter(s=>!fskip(s));
-
-  // KPIs
-  let totC=0,totE=0,totA=0,totP=0,comp=0;
-  skus.forEach(s=>{
-    totC+=gc(s); totE+=ge(s); totA+=ga(s); totP+=gp(s);
-    if(gc(s)>0&&ge(s)>=gc(s)) comp++;
+function logA(type,desc,prov){
+  if(!CU)return;
+  const now=new Date();
+  ALOG.unshift({
+    ts:now.getTime(),
+    fecha:`${pad(now.getDate())}/${pad(now.getMonth()+1)}/${now.getFullYear()}`,
+    hora:`${pad(now.getHours())}:${pad(now.getMinutes())}`,
+    user:CU.d, uk:CU.k, type, desc, prov:prov||''
   });
-  const pG   = totC?Math.round((totE/totC)*100):0;
-  const falt = Math.max(0,totC-totE);
-  const col  = pG>=90?'#2a7d4f':pG>=50?'#c8820a':'#b02020';
+  if(ALOG.length>200) ALOG=ALOG.slice(0,200);
+  localSave();
+  if(fbOk) fbLogPush({ts:now.getTime(),fecha:`${pad(now.getDate())}/${pad(now.getMonth()+1)}/${now.getFullYear()}`,hora:`${pad(now.getHours())}:${pad(now.getMinutes())}`,user:CU.d,uk:CU.k,type,desc,prov:prov||''});
+}
 
-  const provName = ST.tab==='PEPSICO'?'PepsiCo Directo':ST.tab==='MONARREZ'?'Monarrez':'Otros';
-  document.getElementById('kpi-bar').innerHTML=`
-    <div class="ki"><div class="kl">Fill Rate</div><div class="kv ${pG>=90?'ok':pG>=50?'warn':'danger'}">${totC?pG+'%':'—'}</div><div class="ks">${provName}</div></div>
-    <div class="ki"><div class="kl">Entregado</div><div class="kv ok">${totE.toLocaleString()}</div><div class="ks">cajas confirmadas</div></div>
-    <div class="ki"><div class="kl">Por entregar</div><div class="kv danger">${falt.toLocaleString()}</div><div class="ks">cajas restantes</div></div>
-    <div class="ki"><div class="kl">Programado</div><div class="kv warn">${totP.toLocaleString()}</div><div class="ks">por confirmar</div></div>
-    <div class="ki"><div class="kl">SKUs OK</div><div class="kv">${comp}/${skus.filter(s=>gc(s)>0).length}</div><div class="ks">completados</div></div>`;
+// ═══════════════════════════════
+// FIREBASE — optional, loads after login
+// ═══════════════════════════════
+let fbApp=null, fbDb=null;
+const FBC={
+  apiKey:"AIzaSyBe7fKxbvSYKdpV0JLDXs8ok2PUx7VDACQ",
+  authDomain:"sabeamex-fillrate.firebaseapp.com",
+  databaseURL:"https://sabeamex-fillrate-default-rtdb.firebaseio.com",
+  projectId:"sabeamex-fillrate",
+  storageBucket:"sabeamex-fillrate.firebasestorage.app",
+  messagingSenderId:"855424177414",
+  appId:"1:855424177414:web:placeholder"
+};
 
-  document.getElementById('ps-pct').textContent = totC?pG+'%':'—';
-  document.getElementById('track-fill').style.cssText = `width:${Math.min(100,pG)}%;background:${col}`;
-  document.getElementById('sec-title').textContent = `SKUs — ${provName} · ${MESES[ST.mes.m]} ${ST.mes.y}`;
-  document.getElementById('sec-count').textContent = `${vis.length} de ${skus.length} SKUs`;
+function tryFirebase(){
+  // Load Firebase scripts dynamically after login
+  setSyncStatus('sy','Conectando...');
+  loadScript('https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js',()=>{
+    loadScript('https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js',()=>{
+      try{
+        if(!firebase.apps.length) firebase.initializeApp(FBC);
+        fbDb=firebase.database();
+        fbOk=true;
+        setSyncStatus('sy','Sincronizando...');
+        // Get data from Firebase, merge with local
+        fbDb.ref('sabeamex').once('value').then(snap=>{
+          const data=snap.val();
+          if(data){
+            const t=ST.tab,m=ST.mes;
+            ST=data; ST.tab=t; ST.mes=m;
+            if(!ST.provs) ST.provs={};
+            if(!ST.provs.PEPSICO)  ST.provs.PEPSICO={skus:[]};
+            if(!ST.provs.MONARREZ) ST.provs.MONARREZ={skus:[]};
+            if(!ST.provs.OTROS)    ST.provs.OTROS={skus:[]};
+            localSave();
+            render();
+          } else {
+            fbSave(); // push local data to Firebase
+          }
+          setSyncStatus('ok','Sincronizado ✓');
+          // Now listen for real-time changes
+          fbDb.ref('sabeamex').on('value',snap2=>{
+            const d2=snap2.val();
+            if(d2){
+              const t=ST.tab,m=ST.mes;
+              ST=d2; ST.tab=t; ST.mes=m;
+              if(!ST.provs) ST.provs={};
+              if(!ST.provs.PEPSICO)  ST.provs.PEPSICO={skus:[]};
+              if(!ST.provs.MONARREZ) ST.provs.MONARREZ={skus:[]};
+              if(!ST.provs.OTROS)    ST.provs.OTROS={skus:[]};
+              localSave();
+              setSyncStatus('ok','Sincronizado ✓');
+              render();
+            }
+          });
+          fbDb.ref('activity').on('value',snap3=>{
+            const d3=snap3.val();
+            if(d3){
+              ALOG=Object.values(d3).sort((a,b)=>b.ts-a.ts);
+              if(ST.tab==='LOG') renderLog();
+            }
+          });
+        }).catch(()=>setSyncStatus('ok','Local ✓'));
+      }catch(e){
+        fbOk=false;
+        setSyncStatus('ok','Local ✓');
+      }
+    },()=>setSyncStatus('ok','Local ✓'));
+  },()=>setSyncStatus('ok','Local ✓'));
+}
 
-  const cont = document.getElementById('main-content');
-  if(!skus.length){ cont.innerHTML=renderOnboard(); return; }
-  if(!vis.length){ cont.innerHTML='<div class="empty">Sin SKUs en este filtro.</div>'; return; }
+function loadScript(src,onload,onerror){
+  const s=document.createElement('script');
+  s.src=src; s.async=true;
+  s.onload=onload||function(){};
+  s.onerror=onerror||function(){};
+  document.head.appendChild(s);
+}
 
-  cont.innerHTML = `<div class="sku-list">${vis.map(sku=>{
-    const ri  = skus.indexOf(sku);
+function fbSave(){
+  if(!fbDb||!fbOk)return;
+  clearTimeout(saveTimer);
+  saveTimer=setTimeout(()=>{
+    setSyncStatus('sy','Guardando...');
+    fbDb.ref('sabeamex').set(ST)
+      .then(()=>setSyncStatus('ok','Sincronizado ✓'))
+      .catch(()=>setSyncStatus('ok','Local ✓'));
+  },700);
+}
+
+function fbLogPush(entry){
+  if(!fbDb||!fbOk)return;
+  fbDb.ref('activity').push(entry).catch(()=>{});
+}
+
+// ═══════════════════════════════
+// CALCS
+// ═══════════════════════════════
+function mk(){return `${MESES[ST.mes.m]}-${ST.mes.y}`;}
+function gc(s){const c=s.congelados[mk()]||{};return(c.W10||0)+(c.W11||0)+(c.W12||0)+(c.W13||0);}
+function ge(s){return(s.entregas[mk()]||[]).filter(e=>e.confirmado!==false).reduce((a,e)=>a+e.cant,0);}
+function gp(s){return(s.entregas[mk()]||[]).filter(e=>e.confirmado===false).reduce((a,e)=>a+e.cant,0);}
+function ga(s){return s.adicionales[mk()]||0;}
+function gpct(s){const c=gc(s);return c?Math.min(999,Math.round((ge(s)/c)*100)):0;}
+function gst(s){const c=gc(s),p=gpct(s);if(!c)return'no';if(p>100)return'ov';if(p>=90)return'ok';if(p>=30)return'wa';return'da';}
+function glbl(st,p){if(st==='no')return'Sin congelado';if(st==='ov')return'Sobre entregado';if(p>=100)return'Completo ✓';if(p>=90)return'Casi completo';if(p>=30)return'En proceso';if(p>0)return'Atrasado';return'Sin entregas';}
+function setF(f,el){filt=f;document.querySelectorAll('.fb').forEach(b=>b.classList.remove('on'));el.classList.add('on');render();}
+function fskip(s){if(filt==='all')return false;const st=gst(s);if(filt==='da')return!(st==='da'||st==='no');if(filt==='wa')return st!=='wa';if(filt==='ok')return!(st==='ok'||st==='ov');return false;}
+
+// ═══════════════════════════════
+// RENDER
+// ═══════════════════════════════
+function render(){
+  document.getElementById('mlbl').textContent=`${MESES[ST.mes.m]} ${ST.mes.y}`;
+  const sp=ST.tab==='FC'||ST.tab==='GUIA'||ST.tab==='LOG';
+  document.getElementById('kbar').style.display=sp?'none':'grid';
+  document.getElementById('pstrip').style.display=sp?'none':'block';
+  document.getElementById('tbar').style.display=sp?'none':'flex';
+  document.getElementById('fbb').style.display=sp?'none':'flex';
+  document.getElementById('sechdr').style.display='flex';
+  if(ST.tab==='FC'){rFC();return;}
+  if(ST.tab==='GUIA'){rGuia();return;}
+  if(ST.tab==='LOG'){renderLog();return;}
+
+  const skus=ST.provs[ST.tab].skus;
+  const vis=skus.filter(s=>!fskip(s));
+  let tC=0,tE=0,tP=0,comp=0;
+  skus.forEach(s=>{tC+=gc(s);tE+=ge(s);tP+=gp(s);if(gc(s)>0&&ge(s)>=gc(s))comp++;});
+  const pG=tC?Math.round((tE/tC)*100):0;
+  const falt=Math.max(0,tC-tE);
+  const col=pG>=90?'#2a7d4f':pG>=50?'#c8820a':'#b02020';
+  const pn=ST.tab==='PEPSICO'?'PepsiCo Directo':ST.tab==='MONARREZ'?'Monarrez':'Otros';
+
+  document.getElementById('kbar').innerHTML=`
+    <div class="ki"><div class="kl">Fill Rate</div><div class="kv ${pG>=90?'ok':pG>=50?'wa':'da'}">${tC?pG+'%':'—'}</div><div class="ks">${pn}</div></div>
+    <div class="ki"><div class="kl">Entregado</div><div class="kv ok">${tE.toLocaleString()}</div><div class="ks">confirmadas</div></div>
+    <div class="ki"><div class="kl">Falta</div><div class="kv da">${falt.toLocaleString()}</div><div class="ks">cajas</div></div>
+    <div class="ki"><div class="kl">Programado</div><div class="kv wa">${tP.toLocaleString()}</div><div class="ks">por confirmar</div></div>
+    <div class="ki"><div class="kl">SKUs OK</div><div class="kv">${comp}/${skus.filter(s=>gc(s)>0).length}</div><div class="ks">completos</div></div>`;
+  document.getElementById('ppct').textContent=tC?pG+'%':'—';
+  document.getElementById('tfill').style.cssText=`width:${Math.min(100,pG)}%;background:${col}`;
+  document.getElementById('sectit').textContent=`SKUs — ${pn} · ${MESES[ST.mes.m]} ${ST.mes.y}`;
+  document.getElementById('seccnt').textContent=`${vis.length} de ${skus.length}`;
+
+  const cont=document.getElementById('mc');
+  if(!skus.length){cont.innerHTML=`<div style="margin:14px 10px;background:#fff;border:1px solid #ddd;border-radius:6px;padding:24px 16px;text-align:center"><div style="font-size:28px;margin-bottom:8px">📦</div><div style="font-size:14px;font-weight:700;margin-bottom:6px">Sin SKUs — ${pn}</div><div style="font-size:12px;color:#888;margin-bottom:14px">Carga el Excel del congelado.</div><button style="background:#1a1a1a;color:#fff;font-size:12px;font-weight:700;padding:10px 20px;border:none;border-radius:4px;width:100%" onclick="tup('c')">↑ Cargar Congelado</button></div>`;return;}
+  if(!vis.length){cont.innerHTML='<div class="em">Sin SKUs en este filtro.</div>';return;}
+
+  cont.innerHTML='<div class="sl">'+vis.map(sku=>{
+    const ri=skus.indexOf(sku);
     const c=gc(sku),e=ge(sku),p=gpct(sku),st=gst(sku),pg=gp(sku),a=ga(sku);
-    const fsk = Math.max(0,c-e);
-    const key = mk();
-    const cobj= sku.congelados[key]||{};
-    const ents= sku.entregas[key]||[];
-    const bc  = {ok:'b-ok',warn:'b-warn',danger:'b-danger',none:'b-none',over:'b-blue'}[st];
-    const isOpen = openD[ri];
-    return `
-    <div class="sku-card st-${st}" id="card-${ri}">
-      <div class="sku-row" onclick="tog(${ri})">
-        <div>
-          <div class="sku-name">${sku.nom}</div>
-          <div class="sku-clave">${sku.clave}</div>
-        </div>
-        <div class="sku-right">
-          <div class="sku-pct ${st}">${c?p+'%':'—'}</div>
-          <div class="sku-ratio">${e.toLocaleString()} / ${c.toLocaleString()} cj</div>
-        </div>
+    const fsk=Math.max(0,c-e);
+    const key=mk(),co=sku.congelados[key]||{},ents=sku.entregas[key]||[];
+    const stMap={ok:'ok',wa:'wa',da:'da',no:'no',ov:'ov'};
+    const bcMap={ok:'bok',wa:'bwa',da:'bda',no:'bno',ov:'bov'};
+    const spMap={ok:'ok',wa:'wa',da:'da',no:'no',ov:'ov'};
+    return `<div class="sk st-${stMap[st]}">
+      <div class="sr" onclick="tog(${ri})">
+        <div><div class="sn">${sku.nom}</div><div class="sc2">${sku.clave}</div></div>
+        <div class="srr"><div class="sp ${spMap[st]}">${c?p+'%':'—'}</div><div class="srat">${e.toLocaleString()}/${c.toLocaleString()} cj</div></div>
       </div>
-      <div class="sku-bar-wrap"><div class="sku-bar"><div class="sku-bar-fill ${bc}" style="width:${Math.min(100,c?p:0)}%"></div></div></div>
-      <div class="sku-chips">
-        <span class="chip ${st}">${glbl(st,p)}</span>
-        ${fsk>0?`<span class="chip danger">Falta: ${fsk.toLocaleString()} cj</span>`:''}
-        ${pg>0?`<span class="chip warn">Prog: ${pg.toLocaleString()} cj</span>`:''}
-        ${a>0?`<span class="chip blue">+${a.toLocaleString()} adic</span>`:''}
-        <span class="chip gray">Cong: ${c.toLocaleString()}</span>
+      <div class="sb"><div class="sbi"><div class="sbf ${bcMap[st]}" style="width:${Math.min(100,c?p:0)}%"></div></div></div>
+      <div class="ch">
+        <span class="cp ${stMap[st]==='no'?'no':stMap[st]==='ov'?'bl':stMap[st]}">${glbl(st,p)}</span>
+        ${fsk>0?`<span class="cp da">Falta:${fsk.toLocaleString()}</span>`:''}
+        ${pg>0?`<span class="cp wa">Prog:${pg.toLocaleString()}</span>`:''}
+        ${a>0?`<span class="cp bl">+${a.toLocaleString()} adic</span>`:''}
+        <span class="cp gy">Cong:${c.toLocaleString()}</span>
       </div>
-      <div class="sku-detail${isOpen?' open':''}" id="det-${ri}">
-        <div class="det-sec">
-          <div class="det-title">Congelado por semana</div>
-          <div class="sem-grid">
-            ${SEMS.map(w=>{
-              const sv=cobj[w]||0;
-              const ev=ents.filter(x=>x.sem===w&&x.confirmado!==false).reduce((a,b)=>a+b.cant,0);
-              const sp=sv?Math.min(999,Math.round((ev/sv)*100)):0;
-              const sc=!sv?'#bbb':sp>=90?'#2a7d4f':sp>=30?'#c8820a':'#b02020';
-              return `<div class="sem-box">
-                <div class="sem-lbl">${w}</div>
-                <div class="sem-cong">${sv.toLocaleString()}</div>
-                <div class="sem-ent">${ev.toLocaleString()} ent.</div>
-                <div class="sem-pct" style="color:${sc}">${sv?sp+'%':'—'}</div>
-              </div>`;
-            }).join('')}
-          </div>
+      <div class="det${openD[ri]?' op':''}" id="det-${ri}">
+        <div class="ds">
+          <div class="dt">Congelado por semana</div>
+          <div class="sg">${SEMS.map(w=>{
+            const sv=co[w]||0,ev=ents.filter(x=>x.sem===w&&x.confirmado!==false).reduce((a,b)=>a+b.cant,0);
+            const sp2=sv?Math.min(999,Math.round((ev/sv)*100)):0;
+            const sc=!sv?'#bbb':sp2>=90?'#2a7d4f':sp2>=30?'#c8820a':'#b02020';
+            return `<div class="sb2"><div class="sl2">${w}</div><div class="sv">${sv.toLocaleString()}</div><div class="se">${ev.toLocaleString()} ent.</div><div class="sp2" style="color:${sc}">${sv?sp2+'%':'—'}</div></div>`;
+          }).join('')}</div>
         </div>
-        <div class="det-sec">
-          <div class="det-title">Entregas y programaciones</div>
-          ${ents.length?`
-          <table class="ent-tbl">
-            <tr><th>Fecha</th><th>Cajas</th><th>Sem.</th><th>Tipo</th><th>Estado</th><th></th></tr>
-            ${ents.map((en,ei)=>{
-              const isConf=en.confirmado!==false;
-              return `<tr>
-                <td>${en.fecha}</td>
-                <td>${en.cant.toLocaleString()}</td>
-                <td style="font-size:10px;color:#aaa">${en.sem||'—'}</td>
-                <td><span class="ttag ${en.tipo==='prog'?'t-prog':en.tipo==='adic'?'t-adic':'t-man'}">${en.tipo==='prog'?'Prog':en.tipo==='adic'?'Adic':'Manual'}</span></td>
-                <td>${!isConf?`<button class="confirm-btn" onclick="confirmar(${ri},${ei})">✓ Confirmar</button>`:`<span class="conf-tag">✓ Entregado</span>`}</td>
-                <td><button class="del-btn" onclick="delE(${ri},${ei})">✕</button></td>
-              </tr>`;
-            }).join('')}
-          </table>`:`<p style="font-size:11px;color:#aaa;padding:4px 0">Sin movimientos registrados aún.</p>`}
+        <div class="ds">
+          <div class="dt">Entregas y programaciones</div>
+          ${ents.length?`<table class="et"><tr><th>Fecha</th><th>Cajas</th><th>Sem</th><th>Tipo</th><th>Estado</th><th></th></tr>
+          ${ents.map((en,ei)=>{const ic=en.confirmado!==false;return`<tr>
+            <td>${en.fecha}</td><td>${en.cant.toLocaleString()}</td>
+            <td style="font-size:9px;color:#aaa">${en.sem||'—'}</td>
+            <td><span class="tt ${en.tipo==='prog'?'tp':en.tipo==='adic'?'ta':'tm'}">${en.tipo==='prog'?'Prog':en.tipo==='adic'?'Adic':'Manual'}</span></td>
+            <td>${!ic?`<button class="cb" onclick="confirmar(${ri},${ei})">✓ Confirmar</button>`:`<span class="ctg">✓ Entregado</span>`}</td>
+            <td><button class="db" onclick="delE(${ri},${ei})">✕</button></td>
+          </tr>`;}).join('')}</table>`:`<p style="font-size:11px;color:#aaa;padding:4px 0">Sin movimientos aún.</p>`}
         </div>
-        <div class="det-sec">
-          <div class="det-title">Registrar entrega</div>
-          <div class="reg-form">
-            <div class="reg-row">
+        <div class="ds">
+          <div class="dt">Registrar entrega</div>
+          <div class="rf">
+            <div class="rr">
               <input class="inp" id="ec-${ri}" type="number" min="1" placeholder="Cajas recibidas">
-              <select class="inp inp-sm" id="es-${ri}">
-                <option value="">Semana</option>
-                ${SEMS.map(w=>`<option value="${w}">${w}</option>`).join('')}
-              </select>
+              <select class="inp isml" id="es-${ri}"><option value="">Semana</option>${SEMS.map(w=>`<option value="${w}">${w}</option>`).join('')}</select>
             </div>
-            <div class="reg-row">
+            <div class="rr">
               <input class="inp" id="ef-${ri}" placeholder="Fecha dd/mm (opcional)">
-              <button class="btn-reg" onclick="regE(${ri})">+ Registrar</button>
+              <button class="ra" onclick="regE(${ri})">+ Registrar</button>
             </div>
           </div>
         </div>
-        <div class="card-acts">
-          <button class="ca ca-edit" onclick="editC(${ri})">✏ Editar congelado</button>
-          <button class="ca ca-del"  onclick="delS(${ri})">🗑 Eliminar SKU</button>
+        <div class="ca2">
+          <button class="ca ce" onclick="editC(${ri})">✏ Editar congelado</button>
+          <button class="ca cd" onclick="delS(${ri})">🗑 Eliminar SKU</button>
         </div>
       </div>
     </div>`;
-  }).join('')}</div>`;
+  }).join('')+'</div>';
 }
 
-function renderForecast(){
-  const totalW = [0,0,0,0], grandTotal = {total:0};
-  FORECAST_ABRIL.forEach(s=>{ s.w.forEach((v,i)=>totalW[i]+=v); grandTotal.total+=s.w.reduce((a,b)=>a+b,0); });
-  const skusActivos = FORECAST_ABRIL.filter(s=>s.w.reduce((a,b)=>a+b,0)>0).length;
+function renderLog(){
+  document.getElementById('sectit').textContent='Registro de Actividad';
+  document.getElementById('seccnt').textContent=`${ALOG.length} acciones`;
+  const sorted=ALOG.slice(0,150);
+  document.getElementById('mc').innerHTML=`<div class="lw">
+    <div class="li"><b>Registro completo.</b> Cada acción de cualquier usuario queda registrada con fecha, hora y detalle.</div>
+    ${sorted.length?`<div class="lt">${sorted.map(e=>`
+      <div class="lr">
+        <div class="lti">${e.fecha}<br>${e.hora}</div>
+        <span class="lu u-${e.uk||'sistema'}">${e.user}</span>
+        <div class="la">${e.desc}${e.prov?` <span style="font-size:9px;color:#aaa">${e.prov}</span>`:''}</div>
+      </div>`).join('')}</div>`:'<div class="le">Sin actividad registrada aún.</div>'}
+  </div>`;
+}
 
-  document.getElementById('sec-hdr').style.display='flex';
-  document.getElementById('sec-title').textContent='Forecast Abril 2026 — Sabeamex → PepsiCo';
-  document.getElementById('sec-count').textContent=`${skusActivos} SKUs activos · ${grandTotal.total.toLocaleString()} cajas`;
-
-  document.getElementById('main-content').innerHTML=`
-    <div class="fc-summary">
-      <div class="fc-sum-item"><div class="fc-sum-lbl">Total cajas</div><div class="fc-sum-val">${grandTotal.total.toLocaleString()}</div><div class="fc-sum-sub">solicitud abril</div></div>
-      <div class="fc-sum-item"><div class="fc-sum-lbl">SKUs activos</div><div class="fc-sum-val">${skusActivos}</div><div class="fc-sum-sub">de ${FORECAST_ABRIL.length} totales</div></div>
-      <div class="fc-sum-item"><div class="fc-sum-lbl">SKUs en cero</div><div class="fc-sum-val">${FORECAST_ABRIL.length-skusActivos}</div><div class="fc-sum-sub">sin solicitud</div></div>
+function rFC(){
+  const tw=[0,0,0,0];let gt=0;
+  FA.forEach(s=>{s.w.forEach((v,i)=>tw[i]+=v);gt+=s.w.reduce((a,b)=>a+b,0);});
+  const act=FA.filter(s=>s.w.reduce((a,b)=>a+b,0)>0).length;
+  document.getElementById('sectit').textContent='Forecast Abril 2026';
+  document.getElementById('seccnt').textContent=`${act} SKUs · ${gt.toLocaleString()} cajas`;
+  document.getElementById('mc').innerHTML=`
+    <div class="fcs">
+      <div class="fci"><div class="fcl">Total cajas</div><div class="fcv">${gt.toLocaleString()}</div><div class="fcs2">solicitud abril</div></div>
+      <div class="fci"><div class="fcl">SKUs activos</div><div class="fcv">${act}</div><div class="fcs2">de ${FA.length}</div></div>
+      <div class="fci"><div class="fcl">En cero</div><div class="fcv">${FA.length-act}</div><div class="fcs2">sin solicitud</div></div>
     </div>
-    <div style="padding:10px 12px 0;font-size:11px;color:#888;line-height:1.5;background:#fff;margin:10px 12px 0;border:1px solid #ddd;border-radius:5px;padding:10px 12px;">
-      <b>¿Qué es este forecast?</b> Es la "carta a Santa Claus" — lo que Sabeamex le solicita a PepsiCo para abril. PepsiCo analiza disponibilidad y responde con el <b>congelado</b>, que puede ser igual o menor a lo solicitado. Los SKUs en cero (${FORECAST_ABRIL.length-skusActivos}) no se solicitaron este mes.
-    </div>
-    <div class="forecast-section">
-      <div class="forecast-card">
-        <div class="fc-header" onclick="togFC(0)">
-          <span class="fc-title">Detalle por SKU — Abril 2026</span>
-          <span class="fc-total">${grandTotal.total.toLocaleString()} cajas totales</span>
-        </div>
-        <div class="fc-body${openFC[0]?' open':''}" id="fc-0">
-          <table class="fc-tbl">
-            <tr><th>SKU</th><th>Clave PepsiCo</th><th>W10</th><th>W11</th><th>W12</th><th>W13</th><th>Total</th></tr>
-            ${FORECAST_ABRIL.map(s=>{
-              const tot=s.w.reduce((a,b)=>a+b,0);
-              const isEmpty=tot===0;
-              return `<tr style="${isEmpty?'opacity:.4':''}">
-                <td style="font-size:11px;font-weight:${isEmpty?'400':'600'}">${s.nom}</td>
-                <td style="font-size:9px;color:#aaa;font-family:'Courier New',monospace">${s.clave}</td>
-                ${s.w.map(v=>`<td class="${v===0?'fc-zero':''}">${v===0?'—':v.toLocaleString()}</td>`).join('')}
-                <td style="font-weight:700;color:${isEmpty?'#ccc':'#1a1a1a'}">${isEmpty?'—':tot.toLocaleString()}</td>
-              </tr>`;
-            }).join('')}
-            <tr class="fc-total-row">
-              <td colspan="2" style="font-size:11px">TOTAL GENERAL</td>
-              ${totalW.map(v=>`<td>${v.toLocaleString()}</td>`).join('')}
-              <td>${grandTotal.total.toLocaleString()}</td>
-            </tr>
+    <div style="padding:8px 10px">
+      <div style="background:#fff;border:1px solid #ddd;border-radius:5px;padding:10px 12px;font-size:11px;color:#555;line-height:1.6;margin-bottom:8px">
+        <b>Forecast = lo que Sabeamex solicita a PepsiCo para abril.</b> PepsiCo responde con el congelado. Cuando llegue, súbelo con "↑ Congelado" en la pestaña PepsiCo.
+      </div>
+      <div class="fcc">
+        <div class="fch" onclick="togFC(0)"><span class="fct">Detalle por SKU</span><span class="fcto">${gt.toLocaleString()} cajas ▾</span></div>
+        <div class="fcb${openFC[0]?' op':''}" id="fc-0">
+          <table class="fctb">
+            <tr><th>SKU</th><th>W10</th><th>W11</th><th>W12</th><th>W13</th><th>Total</th></tr>
+            ${FA.map(s=>{const tot=s.w.reduce((a,b)=>a+b,0);const em=tot===0;return`<tr style="${em?'opacity:.4':''}">
+              <td style="font-size:11px;font-weight:${em?'400':'700'}">${s.n}</td>
+              ${s.w.map(v=>`<td class="${v===0?'fz':''}">${v===0?'—':v.toLocaleString()}</td>`).join('')}
+              <td>${em?'—':tot.toLocaleString()}</td>
+            </tr>`;}).join('')}
+            <tr class="ftr"><td>TOTAL</td>${tw.map(v=>`<td>${v.toLocaleString()}</td>`).join('')}<td>${gt.toLocaleString()}</td></tr>
           </table>
         </div>
       </div>
     </div>`;
 }
 
-function renderGuia(){
-  document.getElementById('sec-hdr').style.display='flex';
-  document.getElementById('sec-title').textContent='Guía de uso — Fill Rate Tracker';
-  document.getElementById('sec-count').textContent='Para el equipo Sabeamex';
-
-  const secciones = [
-    {
-      num:1, title:'¿Qué es y para qué sirve?',
-      sub:'Entender el propósito de esta herramienta',
-      pasos:[
-        'Esta herramienta mide el <b>Fill Rate</b>: cuánto de lo que PepsiCo o Monarrez prometieron entregar en el mes realmente se cumplió.',
-        'El <b>Congelado</b> es el compromiso que el proveedor firma al inicio del mes, dividido por semana (W10, W11, W12, W13).',
-        'Las <b>Programaciones</b> son los avisos de entrega que mandan 2 días antes. No garantizan entrega hasta que el camión llega.',
-        'El Fill Rate = Cajas entregadas y confirmadas ÷ Cajas congeladas × 100%. Un 90%+ es aceptable. Menos del 70% es problema.',
-        'PepsiCo Directo y Monarrez son proveedores distintos con cuentas separadas. Cada uno tiene su propio fill rate.',
-      ]
-    },
-    {
-      num:2, title:'Al inicio del mes — Cargar el Congelado',
-      sub:'Lo hace el equipo de compras (Yair) cuando llega el Excel del proveedor',
-      pasos:[
-        'Ve a la pestaña <b>PepsiCo Directo</b> o <b>Monarrez</b> según el proveedor.',
-        'Presiona el botón <b>"↑ Cargar Congelado"</b> (arriba en la barra de herramientas o abajo en el botón fijo).',
-        'Selecciona el archivo Excel que manda el proveedor. El formato debe tener: columna "CLAVE UNICA", "IG Descr", y columnas con números de semana (10, 11, 12, 13).',
-        'La herramienta carga automáticamente todos los SKUs con sus cantidades por semana. Verás cuántos SKUs se importaron.',
-        'Si el proveedor actualiza el congelado a mitad de mes, repite el proceso. Los datos existentes se actualizan sin borrar las entregas registradas.',
-      ]
-    },
-    {
-      num:3, title:'Cuando llega la programación de citas',
-      sub:'2 días antes de cada entrega el proveedor manda un Excel con lo que va a llegar',
-      pasos:[
-        'Presiona <b>"↑ Cargar Programación"</b> y sube el Excel de citas.',
-        'Las entregas entran con el tag <span class="guide-tag gt-prog">Prog</span> y estado <b>"Por confirmar"</b> en color amarillo.',
-        'Una entrega programada <b>NO suma al fill rate</b> todavía. Solo es un aviso.',
-        'Si el proveedor manda la programación por correo en una tabla, puedes capturar manualmente: abre el SKU y usa el formulario "Registrar entrega". La entrega manual se registra como confirmada de inmediato.',
-        'Importante: guarda el Excel de programación cada semana. Si hay diferencia entre lo programado y lo entregado, es evidencia para reclamar al proveedor.',
-      ]
-    },
-    {
-      num:4, title:'Cuando llega el camión — Confirmar entregas',
-      sub:'Este paso actualiza el fill rate en tiempo real',
-      pasos:[
-        'Cuando el camión llega y se descarga físicamente, busca el SKU en la lista.',
-        'Abre el SKU (toca sobre él) y busca la entrega en la tabla de movimientos.',
-        'Presiona el botón verde <b>"✓ Confirmar"</b>. En ese momento las cajas se suman al fill rate.',
-        'Si la entrega es parcial (prometieron 500 y llegaron 350): confirma la entrega tal como llegó. Modifica la cantidad si es necesario eliminando y volviendo a registrar.',
-        'Si llegaron cajas de un SKU que no está en el congelado de ese proveedor, usa el botón <b>"+ Adicional"</b> (abajo derecha). Los adicionales se suman aparte y se muestran con tag azul.',
-      ]
-    },
-    {
-      num:5, title:'Registro manual de entregas',
-      sub:'Cuando no hay programación previa o quieres registrar directo',
-      pasos:[
-        'Abre cualquier SKU y baja hasta la sección <b>"Registrar entrega"</b>.',
-        'Escribe las cajas recibidas, selecciona la semana (W10–W13) y opcionalmente la fecha.',
-        'Presiona <b>"+ Registrar"</b>. Esta entrega se registra como <span class="guide-tag gt-man">Manual</span> y se confirma de inmediato.',
-        'Puedes eliminar cualquier entrega con el botón ✕ si te equivocaste.',
-      ]
-    },
-    {
-      num:6, title:'Cambiar de mes',
-      sub:'El tracker guarda historial separado por mes',
-      pasos:[
-        'Toca el botón con el mes actual (arriba derecha, ej: "MAR 2026").',
-        'Selecciona el mes y año que quieres ver o editar.',
-        'Cada mes tiene su propio congelado y entregas. El historial anterior no se borra.',
-        'Para preparar el tracker de un mes nuevo: cambia al mes, carga el congelado de ese mes, y empieza desde cero para ese proveedor.',
-      ]
-    },
-    {
-      num:7, title:'Adicionales — volumen de oportunidad',
-      sub:'Cajas extra que ofrece el proveedor fuera del congelado',
-      pasos:[
-        'A veces PepsiCo o Monarrez ofrecen volumen adicional que no estaba en el congelado.',
-        'Cuando confirmes que quieres ese volumen, presiona <b>"+ Adicional"</b> (botón azul abajo).',
-        'Selecciona el SKU y las cajas confirmadas. Se registran como <span class="guide-tag gt-adic">Adic</span> y se suman al total entregado.',
-        'Los adicionales se muestran en el resumen de cada SKU con una etiqueta azul.',
-      ]
-    },
-    {
-      num:8, title:'Filtros y visualización',
-      sub:'Para revisar rápido el estado del mes',
-      pasos:[
-        '<b>Sin entregar</b>: SKUs donde no ha llegado nada. Prioridad de seguimiento.',
-        '<b>Parcial</b>: SKUs con entregas entre 30% y 89% del congelado. En proceso.',
-        '<b>Completos</b>: SKUs al 90% o más del congelado. Fill rate cumplido.',
-        'El fill rate global del mes se muestra en la barra azul/verde/roja al inicio. La meta interna es mantenerlo por encima del 85%.',
-        'La pestaña <b>Forecast Abril</b> muestra el archivo de solicitud a PepsiCo. Cuando llegue el congelado de abril, cárgalo y el tracker lo compara automáticamente.',
-      ]
-    },
+function rGuia(){
+  document.getElementById('sectit').textContent='Guía de uso';
+  document.getElementById('seccnt').textContent='Para el equipo';
+  const secs=[
+    {n:1,t:'¿Qué es y para qué sirve?',s:'Propósito',ps:['Mide el Fill Rate: cuánto del congelado entregó realmente el proveedor.','Congelado = compromiso del proveedor al inicio del mes por semana (W10–W13).','Programaciones = avisos 2 días antes. No suman al fill rate hasta confirmar la entrega física.','Fill Rate = Cajas confirmadas ÷ Cajas congeladas × 100%. Meta: 90%+.','PepsiCo y Monarrez tienen fill rate separado — son proveedores independientes.','Los datos se guardan localmente y se sincronizan con la nube cuando hay conexión.']},
+    {n:2,t:'Cargar el Congelado al inicio del mes',s:'Cuando llega el Excel del proveedor',ps:['Ve a la pestaña PepsiCo o Monarrez.','Presiona "↑ Congelado" y sube el Excel.','Formato: columnas CLAVE UNICA, IG Descr, 10, 11, 12, 13.','Se importan todos los SKUs automáticamente.']},
+    {n:3,t:'Cargar Programaciones',s:'El Excel 2 días antes de cada entrega',ps:['Presiona "↑ Programación" y sube el archivo.','Entran como Prog — Por confirmar. No suman al fill rate aún.']},
+    {n:4,t:'Confirmar entregas',s:'Cuando llega el camión',ps:['Abre el SKU → busca la entrega → presiona "✓ Confirmar".','Las cajas se suman al fill rate inmediatamente.','Si llegó menos: elimina (✕) y registra la cantidad real.']},
+    {n:5,t:'Registro manual y adicionales',s:'Sin programación previa o volumen extra',ps:['Abre el SKU → "Registrar entrega" → cajas + semana → "+ Registrar".','Para adicionales: botón azul "+ Adicional" abajo a la derecha.']},
+    {n:6,t:'Ver actividad del equipo',s:'Pestaña 🕓 Actividad',ps:['Muestra quién entró, qué cargó, qué confirmó y cuándo.','Se actualiza automáticamente.']},
   ];
-
-  document.getElementById('main-content').innerHTML=`
-    <div class="guide-wrap">
-      <div style="background:#fff;border:1px solid #ddd;border-radius:6px;padding:12px 14px;font-size:12px;color:#444;line-height:1.6">
-        <b>Para el equipo de compras Sabeamex:</b> Esta guía explica paso a paso cómo mantener el tracker actualizado. El objetivo es tener visibilidad diaria del fill rate de PepsiCo y Monarrez, saber qué falta entregar, y tener evidencia documentada del cumplimiento de proveedores.
-      </div>
-      ${secciones.map((s,i)=>`
-      <div class="guide-card">
-        <div class="guide-hdr${openGuide[i]?' open':''}" onclick="togGuide(${i})">
-          <div class="guide-num">${s.num}</div>
-          <div class="guide-hdr-text">
-            <div class="guide-hdr-title">${s.title}</div>
-            <div class="guide-hdr-sub">${s.sub}</div>
-          </div>
-          <span class="guide-arrow${openGuide[i]?' open':''}">▾</span>
-        </div>
-        <div class="guide-body${openGuide[i]?' open':''}" id="guide-${i}">
-          ${s.pasos.map(p=>`<div class="guide-step"><div class="gs-dot"></div><div>${p}</div></div>`).join('')}
-        </div>
-      </div>`).join('')}
-    </div>`;
-}
-
-function renderOnboard(){
-  return `<div style="margin:16px 12px;background:#fff;border:1px solid #ddd;border-radius:6px;padding:24px 16px;text-align:center">
-    <div style="font-size:32px;margin-bottom:10px">📦</div>
-    <div style="font-size:15px;font-weight:700;margin-bottom:6px">Sin SKUs en este proveedor</div>
-    <div style="font-size:12px;color:#888;margin-bottom:16px;line-height:1.5">Carga el Excel del congelado para empezar a medir el fill rate.</div>
-    <button class="fab primary" style="position:static;width:100%" onclick="triggerUpload('congelado')">↑ Cargar Congelado Excel</button>
+  document.getElementById('mc').innerHTML=`<div class="gw">
+    <div style="background:#fff;border:1px solid #ddd;border-radius:6px;padding:11px 12px;font-size:11px;color:#444;line-height:1.6">
+      <b>Para el equipo Sabeamex.</b> Datos guardados localmente + sincronización en la nube cuando hay conexión.
+    </div>
+    ${secs.map((s,i)=>`<div class="gc">
+      <div class="gh" onclick="togG(${i})"><div class="gn">${s.n}</div><div class="gtx"><div class="gtt">${s.t}</div><div class="gts">${s.s}</div></div><span class="gar" id="ga-${i}">${openG[i]?'▴':'▾'}</span></div>
+      <div class="gb${openG[i]?' op':''}" id="gb-${i}">${s.ps.map(p=>`<div class="gsp"><div class="gd"></div><div>${p}</div></div>`).join('')}</div>
+    </div>`).join('')}
   </div>`;
 }
 
-// ══════════════════════════════════════════
+// ═══════════════════════════════
 // INTERACTIONS
-// ══════════════════════════════════════════
-function tog(idx){ openD[idx]=!openD[idx]; const d=document.getElementById(`det-${idx}`); if(d)d.classList.toggle('open',openD[idx]); }
-function togFC(i){ openFC[i]=!openFC[i]; const d=document.getElementById(`fc-${i}`); if(d)d.classList.toggle('open',openFC[i]); }
-function togGuide(i){
-  openGuide[i]=!openGuide[i];
-  const b=document.getElementById(`guide-${i}`);
-  if(b)b.classList.toggle('open',openGuide[i]);
-  // update header classes
-  render(); // re-render to update header class
-}
+// ═══════════════════════════════
+function tog(i){openD[i]=!openD[i];const d=document.getElementById(`det-${i}`);if(d)d.classList.toggle('op',openD[i]);}
+function togFC(i){openFC[i]=!openFC[i];const d=document.getElementById(`fc-${i}`);if(d)d.classList.toggle('op',openFC[i]);}
+function togG(i){openG[i]=!openG[i];const b=document.getElementById(`gb-${i}`);if(b)b.classList.toggle('op',openG[i]);const a=document.getElementById(`ga-${i}`);if(a)a.textContent=openG[i]?'▴':'▾';}
 
 function confirmar(si,ei){
-  ST.provs[ST.tab].skus[si].entregas[mk()][ei].confirmado=true;
+  const sku=ST.provs[ST.tab].skus[si],en=sku.entregas[mk()][ei];
+  en.confirmado=true;
+  logA('confirmar',`Confirmó ${en.cant.toLocaleString()} cajas — ${sku.nom}`,ST.tab);
   openD[si]=true; save(); render();
 }
-function regE(idx){
-  const c=parseInt(document.getElementById(`ec-${idx}`).value);
-  if(!c||c<=0) return;
-  const sem=document.getElementById(`es-${idx}`).value;
-  const fv=document.getElementById(`ef-${idx}`).value.trim();
-  const hoy=new Date();
-  const fecha=fv||`${String(hoy.getDate()).padStart(2,'0')}/${String(hoy.getMonth()+1).padStart(2,'0')}`;
-  const key=mk(); const sku=ST.provs[ST.tab].skus[idx];
+function regE(ri){
+  const c=parseInt(document.getElementById(`ec-${ri}`).value);if(!c||c<=0)return;
+  const sem=document.getElementById(`es-${ri}`).value;
+  const fv=document.getElementById(`ef-${ri}`).value.trim();
+  const hoy=new Date(),fecha=fv||`${pad(hoy.getDate())}/${pad(hoy.getMonth()+1)}`;
+  const key=mk(),sku=ST.provs[ST.tab].skus[ri];
   if(!sku.entregas[key])sku.entregas[key]=[];
   sku.entregas[key].push({fecha,cant:c,tipo:'man',sem,confirmado:true});
-  document.getElementById(`ec-${idx}`).value='';
-  document.getElementById(`ef-${idx}`).value='';
-  document.getElementById(`es-${idx}`).value='';
-  openD[idx]=true; save(); render();
+  logA('entrega',`Registró ${c.toLocaleString()} cajas — ${sku.nom} ${sem}`,ST.tab);
+  document.getElementById(`ec-${ri}`).value='';
+  document.getElementById(`ef-${ri}`).value='';
+  document.getElementById(`es-${ri}`).value='';
+  openD[ri]=true; save(); render();
 }
-function delE(si,ei){ ST.provs[ST.tab].skus[si].entregas[mk()].splice(ei,1); openD[si]=true; save(); render(); }
-function delS(idx){ if(!confirm('¿Eliminar SKU?'))return; ST.provs[ST.tab].skus.splice(idx,1); save(); render(); }
-function editC(idx){
-  const sku=ST.provs[ST.tab].skus[idx];
-  document.getElementById('sel-csk').innerHTML=`<option value="${idx}">${sku.nom}</option>`;
+function delE(si,ei){const en=ST.provs[ST.tab].skus[si].entregas[mk()][ei];logA('del',`Eliminó ${en.cant} cajas — ${ST.provs[ST.tab].skus[si].nom}`,ST.tab);ST.provs[ST.tab].skus[si].entregas[mk()].splice(ei,1);openD[si]=true;save();render();}
+function delS(i){if(!confirm('¿Eliminar SKU?'))return;logA('del-sku',`Eliminó SKU: ${ST.provs[ST.tab].skus[i].nom}`,ST.tab);ST.provs[ST.tab].skus.splice(i,1);save();render();}
+function editC(i){
+  const sku=ST.provs[ST.tab].skus[i];
+  document.getElementById('scsk').innerHTML=`<option value="${i}">${sku.nom}</option>`;
   const c=sku.congelados[mk()]||{};
-  ['nc10','nc11','nc12','nc13'].forEach((id,i)=>document.getElementById(`in-${id}`).value=c[`W${10+i}`]||0);
-  openM('m-cong');
+  ['nc10','nc11','nc12','nc13'].forEach((id,j)=>document.getElementById(`in${id}`).value=c[`W${10+j}`]||0);
+  openM('mcong');
 }
 
-// ══════════════════════════════════════════
-// EXCEL UPLOAD
-// ══════════════════════════════════════════
-function triggerUpload(type){ document.getElementById(`file-${type}`).click(); }
-function handleUpload(type,input){
-  const file=input.files[0]; if(!file) return;
+function tup(t){document.getElementById(t==='c'?'fc':'fp').click();}
+function hup(type,input){
+  const file=input.files[0];if(!file)return;
   const reader=new FileReader();
   reader.onload=e=>{
     try{
       const wb=XLSX.read(e.target.result,{type:'binary'});
       const ws=wb.Sheets[wb.SheetNames[0]];
       const rows=XLSX.utils.sheet_to_json(ws,{header:1,defval:null});
-      if(type==='congelado') importCongelado(rows);
-      else importProgramacion(rows);
-    }catch(err){ alert('Error leyendo el archivo. Verifica que sea .xlsx'); }
+      if(type==='c')impC(rows); else impP(rows);
+    }catch(err){alert('Error leyendo el archivo.');}
   };
-  reader.readAsBinaryString(file);
-  input.value='';
+  reader.readAsBinaryString(file);input.value='';
 }
-function cleanNum(v){ if(v===null||v===undefined)return 0; if(typeof v==='number')return Math.round(v); return parseInt(String(v).replace(/[\s,\xa0]/g,''))||0; }
-
-function importCongelado(rows){
-  let hdr=-1;
-  for(let i=0;i<rows.length;i++){ if(rows[i]&&rows[i].some(v=>String(v||'').toLowerCase().includes('clave'))){ hdr=i; break; } }
-  if(hdr===-1){ alert('No se encontró fila de encabezados.'); return; }
-  const skus=ST.provs[ST.tab].skus; const key=mk();
-  let nv=0,up=0;
+function cn(v){if(v===null||v===undefined)return 0;if(typeof v==='number')return Math.round(v);return parseInt(String(v).replace(/[\s,\xa0]/g,''))||0;}
+function impC(rows){
+  let hdr=-1;for(let i=0;i<rows.length;i++){if(rows[i]&&rows[i].some(v=>String(v||'').toLowerCase().includes('clave'))){hdr=i;break;}}
+  if(hdr===-1){alert('No se encontró fila de encabezados.');return;}
+  const skus=ST.provs[ST.tab].skus,key=mk();let nv=0,up=0;
   for(let i=hdr+1;i<rows.length;i++){
-    const r=rows[i]; if(!r||!r[0]) continue;
-    const claveU=String(r[0]||'').trim();
-    const igD   =String(r[1]||'').trim();
-    const w10=cleanNum(r[2]),w11=cleanNum(r[3]),w12=cleanNum(r[4]),w13=cleanNum(r[5]);
-    if(!claveU||(!w10&&!w11&&!w12&&!w13)) continue;
-    const clave=igD.includes(' - ')?igD.split(' - ').slice(1).join(' - ').trim():igD;
-    let ex=skus.find(s=>s.nom.toLowerCase()===claveU.toLowerCase()||s.clave.toLowerCase()===clave.toLowerCase());
-    if(ex){ ex.congelados[key]={W10:w10,W11:w11,W12:w12,W13:w13}; if(!ex.entregas[key])ex.entregas[key]=[]; if(!ex.adicionales[key])ex.adicionales[key]=0; up++; }
-    else{ const sku={nom:claveU,clave,congelados:{},entregas:{},adicionales:{}}; sku.congelados[key]={W10:w10,W11:w11,W12:w12,W13:w13}; sku.entregas[key]=[]; sku.adicionales[key]=0; skus.push(sku); nv++; }
+    const r=rows[i];if(!r||!r[0])continue;
+    const cu=String(r[0]||'').trim(),ig=String(r[1]||'').trim();
+    const w10=cn(r[2]),w11=cn(r[3]),w12=cn(r[4]),w13=cn(r[5]);
+    if(!cu||(!w10&&!w11&&!w12&&!w13))continue;
+    const clave=ig.includes(' - ')?ig.split(' - ').slice(1).join(' - ').trim():ig;
+    let ex=skus.find(s=>s.nom.toLowerCase()===cu.toLowerCase()||s.clave.toLowerCase()===clave.toLowerCase());
+    if(ex){ex.congelados[key]={W10:w10,W11:w11,W12:w12,W13:w13};if(!ex.entregas[key])ex.entregas[key]=[];if(!ex.adicionales[key])ex.adicionales[key]=0;up++;}
+    else{const sku={nom:cu,clave,congelados:{},entregas:{},adicionales:{}};sku.congelados[key]={W10:w10,W11:w11,W12:w12,W13:w13};sku.entregas[key]=[];sku.adicionales[key]=0;skus.push(sku);nv++;}
   }
-  save(); render();
-  alert(`✓ Congelado cargado:\n• ${nv} SKUs nuevos\n• ${up} SKUs actualizados`);
+  logA('cong',`Cargó congelado ${MESES[ST.mes.m]} ${ST.mes.y}: ${nv} nuevos, ${up} actualizados`,ST.tab);
+  save();render();alert(`✓ Congelado cargado:\n• ${nv} SKUs nuevos\n• ${up} actualizados`);
 }
-
-function importProgramacion(rows){
-  const skus=ST.provs[ST.tab].skus; const key=mk();
-  let ds=0,reg=0,nf=[];
-  for(let i=0;i<rows.length;i++){ if(rows[i]&&rows[i].some(v=>String(v||'').toLowerCase().includes('producto'))){ ds=i+1; break; } }
+function impP(rows){
+  const skus=ST.provs[ST.tab].skus,key=mk();let ds=0,reg=0,nf=[];
+  for(let i=0;i<rows.length;i++){if(rows[i]&&rows[i].some(v=>String(v||'').toLowerCase().includes('producto'))){ds=i+1;break;}}
   for(let i=ds;i<rows.length;i++){
-    const r=rows[i]; if(!r) continue;
-    const prod=String(r[3]||'').trim(); const cajas=cleanNum(r[4]);
-    if(!prod||!cajas) continue;
-    const ocRaw=String(r[2]||''); const sm=ocRaw.match(/W(\d+)/i); const sem=sm?`W${sm[1]}`:'';
-    let fecha='—';
-    try{ if(typeof r[5]==='number'){ const d=XLSX.SSF.parse_date_code(r[5]); if(d)fecha=`${String(d.d).padStart(2,'0')}/${String(d.m).padStart(2,'0')}`; } }catch(e){}
+    const r=rows[i];if(!r)continue;
+    const prod=String(r[3]||'').trim(),cajas=cn(r[4]);if(!prod||!cajas)continue;
+    const sm=String(r[2]||'').match(/W(\d+)/i),sem=sm?`W${sm[1]}`:'';
+    let fecha='—';try{if(typeof r[5]==='number'){const d=XLSX.SSF.parse_date_code(r[5]);if(d)fecha=`${pad(d.d)}/${pad(d.m)}`;}}catch(e){}
     const found=skus.find(s=>s.clave.toLowerCase().includes(prod.toLowerCase().slice(0,10))||prod.toLowerCase().includes(s.clave.toLowerCase().slice(0,10)));
-    if(found){
-      if(!found.entregas[key])found.entregas[key]=[];
-      const dup=found.entregas[key].find(e=>e.cant===cajas&&e.sem===sem&&e.tipo==='prog');
-      if(!dup){ found.entregas[key].push({fecha,cant:cajas,tipo:'prog',sem,confirmado:false}); reg++; }
-    }else nf.push(prod);
+    if(found){if(!found.entregas[key])found.entregas[key]=[];const dup=found.entregas[key].find(e=>e.cant===cajas&&e.sem===sem&&e.tipo==='prog');if(!dup){found.entregas[key].push({fecha,cant:cajas,tipo:'prog',sem,confirmado:false});reg++;}}
+    else nf.push(prod);
   }
-  save(); render();
-  let msg=`✓ Programación cargada: ${reg} entregas registradas como "Por confirmar".`;
-  if(nf.length) msg+=`\n\nProductos no encontrados (${nf.length}):\n${[...new Set(nf)].slice(0,5).join('\n')}`;
+  logA('prog',`Cargó programación: ${reg} entregas por confirmar`,ST.tab);
+  save();render();
+  let msg=`✓ Programación: ${reg} entregas por confirmar.`;
+  if(nf.length)msg+=`\n\nNo encontrados:\n${[...new Set(nf)].slice(0,5).join('\n')}`;
   alert(msg);
 }
 
-// ══════════════════════════════════════════
-// MODALS
-// ══════════════════════════════════════════
-function openM(id){ document.getElementById(id).classList.add('open'); }
-function closeM(id){ document.getElementById(id).classList.remove('open'); }
-document.querySelectorAll('.overlay').forEach(el=>el.addEventListener('click',e=>{if(e.target===el)el.classList.remove('open');}));
+function openM(id){document.getElementById(id).classList.add('op');}
+function closeM(id){document.getElementById(id).classList.remove('op');}
+document.querySelectorAll('.ov').forEach(el=>el.addEventListener('click',e=>{if(e.target===el)el.classList.remove('op');}));
 
-function addSkuManual(){
-  const nom=document.getElementById('in-nom').value.trim(); if(!nom)return;
-  const clave=document.getElementById('in-clv').value.trim(); const key=mk();
+function addSku(){
+  const nom=document.getElementById('inom').value.trim();if(!nom)return;
+  const clave=document.getElementById('inclv').value.trim(),key=mk();
   const sku={nom,clave,congelados:{},entregas:{},adicionales:{}};
-  sku.congelados[key]={W10:parseInt(document.getElementById('in-c10').value)||0,W11:parseInt(document.getElementById('in-c11').value)||0,W12:parseInt(document.getElementById('in-c12').value)||0,W13:parseInt(document.getElementById('in-c13').value)||0};
-  sku.entregas[key]=[]; sku.adicionales[key]=0;
+  sku.congelados[key]={W10:parseInt(document.getElementById('ic10').value)||0,W11:parseInt(document.getElementById('ic11').value)||0,W12:parseInt(document.getElementById('ic12').value)||0,W13:parseInt(document.getElementById('ic13').value)||0};
+  sku.entregas[key]=[];sku.adicionales[key]=0;
+  logA('add-sku',`Agregó SKU: ${nom}`,ST.tab);
   ST.provs[ST.tab].skus.push(sku);
-  ['in-nom','in-clv','in-c10','in-c11','in-c12','in-c13'].forEach(id=>document.getElementById(id).value='');
-  closeM('m-sku'); save(); render();
-}
-
-function openCong(){
-  const skus=ST.provs[ST.tab].skus;
-  const sel=document.getElementById('sel-csk');
-  sel.innerHTML=skus.map((s,i)=>`<option value="${i}">${s.nom}</option>`).join('');
-  if(skus.length){ const c=skus[0].congelados[mk()]||{}; ['nc10','nc11','nc12','nc13'].forEach((id,i)=>document.getElementById(`in-${id}`).value=c[`W${10+i}`]||0); }
-  sel.onchange=function(){ const c=skus[this.value].congelados[mk()]||{}; ['nc10','nc11','nc12','nc13'].forEach((id,i)=>document.getElementById(`in-${id}`).value=c[`W${10+i}`]||0); };
-  openM('m-cong');
+  ['inom','inclv','ic10','ic11','ic12','ic13'].forEach(id=>document.getElementById(id).value='');
+  closeM('msku');save();render();
 }
 function saveCong(){
-  const idx=parseInt(document.getElementById('sel-csk').value);
-  ST.provs[ST.tab].skus[idx].congelados[mk()]={W10:parseInt(document.getElementById('in-nc10').value)||0,W11:parseInt(document.getElementById('in-nc11').value)||0,W12:parseInt(document.getElementById('in-nc12').value)||0,W13:parseInt(document.getElementById('in-nc13').value)||0};
-  closeM('m-cong'); save(); render();
+  const i=parseInt(document.getElementById('scsk').value);
+  ST.provs[ST.tab].skus[i].congelados[mk()]={W10:parseInt(document.getElementById('innc10').value)||0,W11:parseInt(document.getElementById('innc11').value)||0,W12:parseInt(document.getElementById('innc12').value)||0,W13:parseInt(document.getElementById('innc13').value)||0};
+  logA('edit-cong',`Editó congelado de ${ST.provs[ST.tab].skus[i].nom}`,ST.tab);
+  closeM('mcong');save();render();
 }
-
 function openAdic(){
-  const skus=ST.provs[ST.tab].skus;
-  if(ST.tab==='FORECAST'||ST.tab==='GUIA'||!skus.length){ alert('Selecciona un proveedor primero.'); return; }
-  document.getElementById('sel-ask').innerHTML=skus.map((s,i)=>`<option value="${i}">${s.nom}</option>`).join('');
-  document.getElementById('in-acnt').value='';
-  openM('m-adic');
+  if(ST.tab==='FC'||ST.tab==='GUIA'||ST.tab==='LOG'){alert('Selecciona un proveedor primero.');return;}
+  const skus=ST.provs[ST.tab].skus;if(!skus.length){alert('Carga el congelado primero.');return;}
+  document.getElementById('sask').innerHTML=skus.map((s,i)=>`<option value="${i}">${s.nom}</option>`).join('');
+  document.getElementById('iacnt').value='';openM('madic');
 }
 function saveAdic(){
-  const idx=parseInt(document.getElementById('sel-ask').value);
-  const cant=parseInt(document.getElementById('in-acnt').value)||0; if(!cant)return;
-  const key=mk(); const sku=ST.provs[ST.tab].skus[idx];
+  const i=parseInt(document.getElementById('sask').value);
+  const cant=parseInt(document.getElementById('iacnt').value)||0;if(!cant)return;
+  const key=mk(),sku=ST.provs[ST.tab].skus[i];
   sku.adicionales[key]=(sku.adicionales[key]||0)+cant;
   if(!sku.entregas[key])sku.entregas[key]=[];
   const hoy=new Date();
-  sku.entregas[key].push({fecha:`${String(hoy.getDate()).padStart(2,'0')}/${String(hoy.getMonth()+1).padStart(2,'0')}`,cant,tipo:'adic',sem:'',confirmado:true});
-  closeM('m-adic'); save(); render();
+  sku.entregas[key].push({fecha:`${pad(hoy.getDate())}/${pad(hoy.getMonth()+1)}`,cant,tipo:'adic',sem:'',confirmado:true});
+  logA('adicional',`Adicional ${cant.toLocaleString()} cajas — ${sku.nom}`,ST.tab);
+  closeM('madic');save();render();
 }
-
-function setTab(tab,el){
-  ST.tab=tab;
-  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('on'));
-  el.classList.add('on');
-  openD={}; save(); render();
-}
-
+function setTab(tab,el){ST.tab=tab;document.querySelectorAll('.tab').forEach(t=>t.classList.remove('on'));el.classList.add('on');openD={};render();}
 function openMes(){
-  document.getElementById('in-anio').value=ST.mes.y;
-  document.getElementById('mes-grid').innerHTML=MESES.map((m,i)=>`<button class="mo${i===ST.mes.m?' on':''}" onclick="setMes(${i})">${m}</button>`).join('');
-  openM('m-mes');
+  document.getElementById('ianio').value=ST.mes.y;
+  document.getElementById('mgrid').innerHTML=MESES.map((m,i)=>`<button class="mo${i===ST.mes.m?' on':''}" onclick="setMes(${i})">${m}</button>`).join('');
+  openM('mmes');
 }
 function setMes(m){
-  ST.mes={m,y:parseInt(document.getElementById('in-anio').value)||2026};
+  ST.mes={m,y:parseInt(document.getElementById('ianio').value)||2026};
   document.querySelectorAll('.mo').forEach((b,i)=>b.classList.toggle('on',i===m));
-  openD={}; save(); render();
+  openD={};render();
 }
-document.getElementById('in-anio').addEventListener('change',()=>setMes(ST.mes.m));
-
-render();
+document.getElementById('ianio').addEventListener('change',()=>setMes(ST.mes.m));
 </script>
 
 </body>
